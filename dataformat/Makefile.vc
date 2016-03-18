@@ -1,0 +1,34 @@
+# Microsoft Visual C++ makefile for use with nmake.exe
+# This builds dataformat library with statically linked CRT
+# E.g. nmake -f Makefile.vc
+#
+# To build a 64 bit version make sure to:
+# 1. Uncomment the line "LIB = lib.exe /MACHINE:x64"
+# 2. Comment the line "LIB = lib.exe"
+# 3. Use the x64 command prompt (Installed along with Visual studio)
+# 4. nmake -f Makefile.vc clean
+# 5. nmake -f Makefile.vc
+#
+# Make sure to choose appropriate CXXFLAGS line
+
+CXX = cl.exe
+LIB = lib.exe
+#LIB = lib.exe /MACHINE:x64
+#CXXFLAGS = -DPLATFORM_MSW -D_CRT_SECURE_NO_DEPRECATE /MTd /Z7 /nologo
+CXXFLAGS = -DPLATFORM_MSW -D_CRT_SECURE_NO_DEPRECATE -DINTFLOAT_LONG /MTd /Z7 /nologo
+
+OBJ1 = readtokens.obj table.obj
+OBJ2 = format.obj formatdispatch.obj formatbinary.obj formatdiscr.obj formatcont.obj formatsymbol.obj formattime.obj formatunknown.obj
+OBJ3 = data.obj datafile.obj datadispatch.obj
+
+all: dataformat.lib
+
+dataformat.lib: $(OBJ1) $(OBJ2) $(OBJ3)
+	del dataformat.lib
+	$(LIB) -nologo -out:$@ $(OBJ1) $(OBJ2) $(OBJ3)
+
+clean:
+	del $(OBJ1) $(OBJ2) $(OBJ3) dataformat.lib
+
+.cc.obj:
+	$(CXX) $(CXXFLAGS) /c $<

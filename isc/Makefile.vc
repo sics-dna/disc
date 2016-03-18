@@ -1,0 +1,32 @@
+# Microsoft Visual C++ makefile for use with nmake.exe
+# This builds the isc library with statically linked CRT
+# E.g. nmake -f Makefile.vc
+#
+# To build a 64 bit version make sure to:
+# 1. Uncomment the line "LIB = lib.exe /MACHINE:x64"
+# 2. Comment the line "LIB = lib.exe"
+# 3. Use the x64 command prompt (Installed along with Visual studio)
+# 4. nmake -f Makefile.vc clean
+# 5. nmake -f Makefile.vc
+#
+# Make sure to choose appropriate CXXFLAGS line
+
+CXX = cl.exe
+LIB = lib.exe
+#LIB = lib.exe /MACHINE:x64
+CXXFLAGS = -DWIN32 -D_CRT_SECURE_NO_DEPRECATE /MTd /Z7 /nologo /I../dataformat 
+#CXXFLAGS = -DWIN32 -D_CRT_SECURE_NO_DEPRECATE -DINTFLOAT_LONG /MTd /Z7 /nologo /I../dataformat
+
+OBJS = anomalydetector.obj isc_mixture.obj isc_component.obj isc_micromodel_poissongamma.obj isc_micromodel_gaussian.obj isc_micromodel_multigaussian.obj hmatrix.obj gamma.obj hgf.obj
+
+all: isc.lib
+
+isc.lib: $(OBJS)
+	del isc.lib
+	$(LIB) -nologo -out:$@ $(OBJS)
+
+clean:
+	del $(OBJS) isc.lib
+
+.cc.obj:
+	$(CXX) $(CXXFLAGS) /c $<

@@ -1,0 +1,3 @@
+MS Windows only.
+This subdirectory is used by Qt Creator to build dataformat.dll (and
+libdataformat.a). No other build option in the original Makefile is supported.

@@ -1,0 +1,21 @@
+data.o: data.cc readtokens.hh format.hh intfloat.hh growable.hh data.hh
+datadispatch.o: datadispatch.cc format.hh intfloat.hh growable.hh data.hh
+format.o: format.cc table.hh readtokens.hh format.hh intfloat.hh \
+ growable.hh formatunknown.hh formatdispatch.hh formattypes.hh
+formatbinary.o: formatbinary.cc readtokens.hh format.hh intfloat.hh \
+ growable.hh formatbinary.hh
+formatcont.o: formatcont.cc readtokens.hh format.hh intfloat.hh \
+ growable.hh formatunknown.hh formatcont.hh
+formatdiscr.o: formatdiscr.cc readtokens.hh format.hh intfloat.hh \
+ growable.hh formatunknown.hh formatdiscr.hh
+formatdispatch.o: formatdispatch.cc format.hh intfloat.hh growable.hh \
+ readtokens.hh formatbinary.hh formatdiscr.hh formatcont.hh \
+ formatsymbol.hh formatunknown.hh
+formatsymbol.o: formatsymbol.cc readtokens.hh table.hh format.hh \
+ intfloat.hh growable.hh formatunknown.hh formatsymbol.hh
+formatunknown.o: formatunknown.cc readtokens.hh table.hh format.hh \
+ intfloat.hh growable.hh formatunknown.hh
+makeformat.o: makeformat.cc format.hh intfloat.hh growable.hh
+readtokens.o: readtokens.cc readtokens.hh
+selectcolumns.o: selectcolumns.cc readtokens.hh
+table.o: table.cc table.hh

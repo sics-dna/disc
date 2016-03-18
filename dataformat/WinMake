@@ -1,0 +1,42 @@
+# Windows Makefile
+
+CXX = cl
+CXXFLAGS = -W3 -I..\include $(DEFINES)
+CC = cl
+CFLAGS = -W3 -I$(HOME)/src/include $(DEFINES)
+
+OBJ1 = readtokens.obj table.obj
+OBJ2 = format.obj formatdispatch.obj formatbinary.obj formatdiscr.obj formatcont.obj formatsymbol.obj formatunknown.obj
+OBJ3 = data.obj datadispatch.obj
+
+all: dataformat.lib
+
+makeformat: makeformat.obj $(OBJ1) $(OBJ2) $(OBJ3)
+
+dataformat.lib: $(OBJ1) $(OBJ2) $(OBJ3)
+	lib /out:dataformat.lib $(OBJ1) $(OBJ2) $(OBJ3)
+
+clean:
+	del $(OBJ1) $(OBJ2) $(OBJ3)
+
+data.obj: data.cc readtokens.hh format.hh intfloat.hh growable.hh data.hh
+datadispatch.obj: datadispatch.cc format.hh intfloat.hh growable.hh data.hh
+format.obj: format.cc table.hh readtokens.hh format.hh intfloat.hh \
+  growable.hh formatunknown.hh formatdispatch.hh formattypes.hh
+formatbinary.obj: formatbinary.cc readtokens.hh format.hh intfloat.hh \
+  growable.hh formatbinary.hh
+formatcont.obj: formatcont.cc readtokens.hh format.hh intfloat.hh \
+  growable.hh formatunknown.hh formatcont.hh
+formatdiscr.obj: formatdiscr.cc readtokens.hh format.hh intfloat.hh \
+  growable.hh formatunknown.hh formatdiscr.hh
+formatdispatch.obj: formatdispatch.cc format.hh intfloat.hh growable.hh \
+  readtokens.hh formatbinary.hh formatdiscr.hh formatcont.hh \
+  formatsymbol.hh formatunknown.hh
+formatsymbol.obj: formatsymbol.cc readtokens.hh table.hh format.hh \
+  intfloat.hh growable.hh formatunknown.hh formatsymbol.hh
+formatunknown.obj: formatunknown.cc readtokens.hh table.hh format.hh \
+  intfloat.hh growable.hh formatunknown.hh
+makeformat.obj: makeformat.cc format.hh intfloat.hh growable.hh
+readtokens.obj: readtokens.cc readtokens.hh
+selectcolumns.obj: selectcolumns.cc readtokens.hh
+table.obj: table.cc table.hh
