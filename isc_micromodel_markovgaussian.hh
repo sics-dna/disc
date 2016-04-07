@@ -36,7 +36,7 @@
 #include "hmatrix.hh"
 #include "dynindvector.hh"
 #include "intfloat.hh"
-
+#include "isc_micromodel.hh"
 
 // A Markov model of a multivariate Gaussian distribution.
 // That is, the state is described by a
@@ -65,8 +65,9 @@ struct IscMgdGlobalInfo {
 };
 
 class IscMgdAccumulator {
+public:
 	IscMgdAccumulator() {sqdist = logdet = 0.0; };
-
+	~IscMgdAccumulator(){};
 
 	// Read out anomaly and log predicted prob
 	virtual double anomaly_acc() {
@@ -175,7 +176,11 @@ class IscMarkovGaussCombinerMicroModel : public IscMicroModel {
 		this->num_of_components=num_of_components;
 		this->accumulator = new IscMgdAccumulator();
 	};
-	~IscMarkovGaussCombinerMicroModel();
+	~IscMarkovGaussCombinerMicroModel() {
+		if(accumulator) {
+			delete accumulator;
+		}
+	}
 
 	// Read out anomaly and log predicted prob
 	virtual double anomaly(union intfloat* vec) {
