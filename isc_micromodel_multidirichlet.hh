@@ -44,7 +44,7 @@ public:
 
   virtual IscMicroModel* create() {
 	  return  new IscMultiDirichletMicroModel(dim, indv, outcomes);
-  }
+  };
 
   // Read out anomaly and log predicted prob
   virtual double anomaly(intfloat* vec) { update(); return log(incgammaq(totmean*totmean/totvar, logp(vec)*totmean/totvar)); };
