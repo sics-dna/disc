@@ -178,7 +178,7 @@ protected:
 // a Bayesian Network.
 //
 class IscMarkovGaussCombinerMicroModel : public IscMicroModel {
-
+public:
 	// New components are created internally, so the given components are not kept.
 	IscMarkovGaussCombinerMicroModel(IscMarkovGaussMicroModel** gaussian_components, int num_of_components) {
 		IscMarkovGaussMicroModel** comps = new IscMarkovGaussMicroModel*[num_of_components];
