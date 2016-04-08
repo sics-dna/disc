@@ -30,6 +30,9 @@ public:
   IscMicroModel() {};
   virtual ~IscMicroModel() {};
 
+  // Should returns a micro model of the same class and with the same creation parameters.
+  virtual IscMicroModel* create();
+
   // Read out anomaly and log predicted prob
   virtual double anomaly(union intfloat* vec) = 0;
   virtual double logp(union intfloat* vec) = 0;

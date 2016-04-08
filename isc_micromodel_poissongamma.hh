@@ -104,6 +104,10 @@ public:
   IscGammaMicroModel(int ir, int it) { indr=ir; indt=it; };
   virtual ~IscGammaMicroModel() {};
 
+  virtual IscMicroModel* create() {
+	  return new IscGammaMicroModel(indr,indr);
+  };
+
   // Read out anomaly and log predicted prob
   virtual double anomaly(intfloat* vec) { return raw_anomaly(vec[indr].f, vec[indt].f, vec[indr].f, vec[indt].f); };
   virtual double logp(intfloat* vec) { return raw_logp(vec[indr].f, vec[indt].f, vec[indr].f, vec[indt].f); };
