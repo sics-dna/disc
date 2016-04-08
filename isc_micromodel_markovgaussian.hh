@@ -67,7 +67,7 @@ struct IscMgdGlobalInfo {
 class IscMgdAccumulator {
 public:
 	IscMgdAccumulator() {sqdist = logdet = 0.0; };
-	~IscMgdAccumulator(){};
+	virtual ~IscMgdAccumulator(){};
 
 	// Read out anomaly and log predicted prob
 	virtual double anomaly_acc() {
