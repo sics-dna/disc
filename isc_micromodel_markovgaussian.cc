@@ -22,7 +22,7 @@
 #include "isc_micromodel_markovgaussian.hh"
 
 
-virtual void IscMarkovGaussMicroModel::add_acc(IscMgdAccumulator *acc, intfloat* vec) {
+void IscMarkovGaussMicroModel::add_acc(IscMgdAccumulator *acc, intfloat* vec) {
 	double *tmp = new double[gdim_tot];
 	IscMgdGaussComp* gmod = getGaussComponent();
 
@@ -34,12 +34,12 @@ virtual void IscMarkovGaussMicroModel::add_acc(IscMgdAccumulator *acc, intfloat*
 
 
 // Training
-virtual void IscMarkovGaussMicroModel::add(intfloat* vec) {
+void IscMarkovGaussMicroModel::add(intfloat* vec) {
 	double *tmp = new double[gdim_tot];
 	IscMgdGaussComp* gmod = getGaussComponent();
 
 	for (int i=0; i<gdim_tot; i++)
-		tmp[i] = vec[gindv[i]].f - mod2->mean[i];
+		tmp[i] = vec[gindv[i]].f - gmod->mean[i];
 	gmod->count += 1.0;
 	for (int i=0; i<gdim_tot; i++)
 		gmod->mean[i] += tmp[i]/gmod->count;
@@ -49,23 +49,23 @@ virtual void IscMarkovGaussMicroModel::add(intfloat* vec) {
 	delete [] tmp;
 };
 
-virtual void IscMarkovGaussMicroModel::remove(intfloat* vec) {
+void IscMarkovGaussMicroModel::remove(intfloat* vec) {
 	double *tmp = new double[gdim_tot];
 	double lc0, lc1;
 	IscMgdGaussComp* gmod = getGaussComponent();
 
 	for (int i=0; i<gdim_tot; i++)
-		tmp[i] = vec[gindv[i]].f - mod2->mean[i];
+		tmp[i] = vec[gindv[i]].f - gmod->mean[i];
 	gmod->count -= 1.0;
 	for (int i=0; i<gdim_tot; i++)
-		gmod->mean[i] -= tmp[i]/mod2->count;
-	gmod->var->accum(tmp, -1.0/mod2->count);
+		gmod->mean[i] -= tmp[i]/gmod->count;
+	gmod->var->accum(tmp, -1.0/gmod->count);
 	gmod->var->scale((gmod->count + 1.0)/gmod->count);
 
 	delete [] tmp;
 };
 
-virtual void IscMarkovGaussMicroModel::reset() {
+void IscMarkovGaussMicroModel::reset() {
 
 	IscMgdGaussComp* gmod = getGaussComponent();
 	gmod->count = modelinfo.prior_n;
@@ -78,8 +78,8 @@ virtual void IscMarkovGaussMicroModel::reset() {
 }
 
 
-virtual IscMgdGaussComp* IscMarkovGaussMicroModel::getGaussComponent() {
-	if(!mod2) {
+IscMgdGaussComp* IscMarkovGaussMicroModel::getGaussComponent() {
+	if(!gaussian_component) {
 		gaussian_component = new IscMgdGaussComp(gdim_tot, modelinfo.prior_n, modelinfo.prior_v);
 	}
 	return gaussian_component;

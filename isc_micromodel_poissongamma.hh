@@ -59,7 +59,9 @@ class IscExponentialMicroModel : public IscMicroModel, public IscRawExponentialM
 public:
   IscExponentialMicroModel(int ir, int it, int irr, int itt) { indr=ir; indt=it; indrr=irr; indtt=itt; };
   virtual ~IscExponentialMicroModel() {};
-
+  virtual IscMicroModel* create() {
+	  return new IscExponentialMicroModel(indr,indt,indrr,indtt);
+  };
   // Read out anomaly and log predicted prob
   virtual double anomaly(intfloat* vec) { return raw_anomaly(vec[indr].f, vec[indt].f, vec[indrr].f, vec[indtt].f); };
   virtual double logp(intfloat* vec) { return raw_logp(vec[indr].f, vec[indt].f, vec[indrr].f, vec[indtt].f); };
@@ -80,7 +82,9 @@ class IscPoissonMicroModel : public IscMicroModel, public IscRawExponentialMicro
 public:
   IscPoissonMicroModel(int ir, int it) { indr=ir; indt=it; };
   virtual ~IscPoissonMicroModel() {};
-
+  virtual IscMicroModel* create() {
+	  return new IscPoissonMicroModel(indr,indt);
+  };
   // Read out anomaly and log predicted prob
   virtual double anomaly(intfloat* vec) { return raw_anomaly(vec[indr].f, vec[indt].f, HUGE_VALF, vec[indt].f); };
   virtual double logp(intfloat* vec) { return raw_logp(vec[indr].f, vec[indt].f, HUGE_VALF, vec[indt].f); };
@@ -99,10 +103,30 @@ public:
   int indr, indt;
 };
 
+
+class IscPoissonMicroModelOneside : public IscPoissonMicroModel {
+public:
+  IscPoissonMicroModelOneside(int ir, int it) : IscPoissonMicroModel(ir, it) {};
+  virtual ~IscPoissonMicroModelOneside() {};
+  virtual IscMicroModel* create() {
+	  return new IscPoissonMicroModelOneside(indr,indt);
+  };
+  virtual double anomaly(intfloat* vec) {
+	  if (vec[indr].f*sumt < sumr*vec[indt].f)
+		  return 0.0;
+	  else
+		  return IscPoissonMicroModel::anomaly(vec);
+  };
+};
+
 class IscGammaMicroModel  : public IscMicroModel, public IscRawExponentialMicroModel {
 public:
   IscGammaMicroModel(int ir, int it) { indr=ir; indt=it; };
   virtual ~IscGammaMicroModel() {};
+
+  virtual IscMicroModel* create() {
+	  return new IscGammaMicroModel(indr,indt);
+  };
 
   // Read out anomaly and log predicted prob
   virtual double anomaly(intfloat* vec) { return raw_anomaly(vec[indr].f, vec[indt].f, vec[indr].f, vec[indt].f); };

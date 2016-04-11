@@ -40,6 +40,10 @@ public:
   IscMultiGaussianMicroModel(int d, int* iv) { int i; dim = d; indv = new int[d]; sumx = new double[d]; sumxx = new HMatrix(d,2); mean = new double[d]; var = new HMatrix(d,2); dirty = 1; n = 0.0; prior_n = 0.0; prior_var = 0.0; for (i=0; i<d; i++) indv[i] = iv[i], sumx[i] = 0.0; };
   virtual ~IscMultiGaussianMicroModel() { delete [] indv; delete [] sumx; delete sumxx; delete [] mean; delete var; };
 
+  virtual IscMicroModel* create() {
+	  return new IscMultiGaussianMicroModel(dim, indv);
+  }
+
   // Read out anomaly and log predicted prob
   virtual double anomaly(intfloat* vec) { update(); return raw_anomaly(dist(vec), n, dim); };
   virtual double logp(intfloat* vec) { update(); return raw_logp(dist(vec), var->det(), n, dim); };

@@ -38,7 +38,9 @@ class IscGaussianMicroModel : public IscMicroModel, public IscRawGaussianMicroMo
 public:
   IscGaussianMicroModel(int ix) { indx=ix; };
   virtual ~IscGaussianMicroModel() {};
-
+  virtual IscMicroModel* create() {
+	  return new IscGaussianMicroModel(indx);
+  }
   // Read out anomaly and log predicted prob
   virtual double anomaly(intfloat* vec) { return raw_anomaly(vec[indx].f, 0.5*n, sumx/n, (n+1.0)/n*(sumxx-sumx*sumx/n)); };
   virtual double logp(intfloat* vec) { return raw_logp(vec[indx].f, 0.5*n, sumx/n, (n+1.0)/n*(sumxx-sumx*sumx/n)); };
@@ -62,7 +64,9 @@ class IscGaussianDriftMicroModel : public IscMicroModel, public IscRawGaussianMi
 public:
   IscGaussianDriftMicroModel(int ix, int it) { indx=ix; indt=it; dirty=0; };
   virtual ~IscGaussianDriftMicroModel() {};
-
+  virtual IscMicroModel* create() {
+	  return new IscGaussianDriftMicroModel(indx,indt);
+  }
   // Read out anomaly and log predicted prob
   virtual double anomaly(intfloat* vec) { update(); return raw_anomaly(0.0, cc, mean, scale); };
   virtual double logp(intfloat* vec) { update(); return raw_logp(0.0, cc, mean, scale); };
@@ -88,7 +92,9 @@ class IscGaussianAverageMicroModel : public IscMicroModel, public IscRawGaussian
 public:
   IscGaussianAverageMicroModel(int ix, int is) { indx=ix; inds=is; };
   virtual ~IscGaussianAverageMicroModel() {};
-
+  virtual IscMicroModel* create() {
+	  return new IscGaussianAverageMicroModel(indx,inds);
+  };
   // Read out anomaly and log predicted prob
   virtual double anomaly(intfloat* vec) { update(); return raw_anomaly(vec[indx].f, cc, mean, (sums+vec[inds].f)/(sums*vec[inds].f)*scale); };
   virtual double logp(intfloat* vec) { update(); return raw_logp(vec[indx].f, cc, mean, (sums+vec[inds].f)/(sums*vec[inds].f)*scale); };
@@ -114,7 +120,9 @@ class IscGaussianAverageDriftMicroModel : public IscMicroModel, public IscRawGau
 public:
   IscGaussianAverageDriftMicroModel(int ix, int is, int it) { indx=ix; inds=is; indt=it; };
   virtual ~IscGaussianAverageDriftMicroModel() {};
-
+  virtual IscMicroModel* create() {
+	  return new IscGaussianAverageDriftMicroModel(indx,inds,indt);
+  };
   // Read out anomaly and log predicted prob
   virtual double anomaly(intfloat* vec) { update(); return raw_anomaly(0.0, cc, mean, scale); };
   virtual double logp(intfloat* vec) { update(); return raw_logp(0.0, cc, mean, scale); };

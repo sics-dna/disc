@@ -30,9 +30,12 @@ public:
   IscMicroModel() {};
   virtual ~IscMicroModel() {};
 
+  // Should returns a micro model of the same class and with the same creation parameters as used when constructed.
+  virtual IscMicroModel* create() {return 0;};
+
   // Read out anomaly and log predicted prob
-  virtual double anomaly(union intfloat* vec) = 0;
-  virtual double logp(union intfloat* vec) = 0;
+  virtual double anomaly(union intfloat* vec) {};
+  virtual double logp(union intfloat* vec) {};
 
   // Features that may or may not be implemented. Returns 0 if not.
   virtual int ev_logp(union intfloat* vec, double& e, double& v) { return 0; };
@@ -41,9 +44,9 @@ public:
   virtual int stats(union intfloat* vec, double* expect, double* var) { return 0; };
 
   // Training
-  virtual void add(union intfloat* vec) = 0;
-  virtual void remove(union intfloat* vec) = 0;
-  virtual void reset() = 0;
+  virtual void add(union intfloat* vec) {};
+  virtual void remove(union intfloat* vec) {};
+  virtual void reset() {};
 };
 
 #endif

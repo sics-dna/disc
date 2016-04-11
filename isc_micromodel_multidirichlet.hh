@@ -42,6 +42,10 @@ public:
   IscMultiDirichletMicroModel(int d, int* iv, int* no) { dim = d; indv = new int[d]; outcomes = new int[d]; totcount = new double[d]; counts = new double*[d]; mean = 0.0; var = 0.0; dirty = 1; n = 0.0; prior_n = 0.0; for (int i=0; i<d; i++) { indv[i] = iv[i]; outcomes[i] = no[i]; totcount[i] = 0.0; counts[i] = new double[no[i]]; for (int j=0; j<no[i]; j++) counts[i][j] = 0.0; }};
   virtual ~IscMultiDirichletMicroModel() { delete [] indv; delete [] outcomes; delete [] totcount; for (int i=0; i<dim; i++) delete [] counts[i]; delete [] counts; };
 
+  virtual IscMicroModel* create() {
+	  return  new IscMultiDirichletMicroModel(dim, indv, outcomes);
+  };
+
   // Read out anomaly and log predicted prob
   virtual double anomaly(intfloat* vec) { update(); return log(incgammaq(totmean*totmean/totvar, logp(vec)*totmean/totvar)); };
   virtual double logp(intfloat* vec) { int ind; double lp = 0.0; update(); for (int i=0; i<dim; i++) { ind = vec[indv[i]].i; if (ind != -1) lp += log(counts[i][ind]/totcount[i]); } return lp; };

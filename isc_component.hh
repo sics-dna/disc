@@ -22,6 +22,8 @@
 #ifndef IscComponent_HH_
 #define IscComponent_HH_
 
+#include "isc_micromodel.hh"
+
 typedef class IscMicroModel* (*IscCreateFunc)(const void* co, int ind);
 
 enum IscCombinationRule { IscMax, IscPlus, IscBoth };
