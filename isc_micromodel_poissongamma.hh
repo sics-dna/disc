@@ -60,7 +60,7 @@ public:
   IscExponentialMicroModel(int ir, int it, int irr, int itt) { indr=ir; indt=it; indrr=irr; indtt=itt; };
   virtual ~IscExponentialMicroModel() {};
   virtual IscMicroModel* create() {
-	  return new IscExponentialMicroModel(indr,indr,indrr,indrr);
+	  return new IscExponentialMicroModel(indr,indt,indrr,indtt);
   };
   // Read out anomaly and log predicted prob
   virtual double anomaly(intfloat* vec) { return raw_anomaly(vec[indr].f, vec[indt].f, vec[indrr].f, vec[indtt].f); };
@@ -83,7 +83,7 @@ public:
   IscPoissonMicroModel(int ir, int it) { indr=ir; indt=it; };
   virtual ~IscPoissonMicroModel() {};
   virtual IscMicroModel* create() {
-	  return new IscPoissonMicroModel(indr,indr);
+	  return new IscPoissonMicroModel(indr,indt);
   };
   // Read out anomaly and log predicted prob
   virtual double anomaly(intfloat* vec) { return raw_anomaly(vec[indr].f, vec[indt].f, HUGE_VALF, vec[indt].f); };
@@ -109,7 +109,7 @@ public:
   IscPoissonMicroModelOneside(int ir, int it) : IscPoissonMicroModel(ir, it) {};
   virtual ~IscPoissonMicroModelOneside() {};
   virtual IscMicroModel* create() {
-	  return new IscPoissonMicroModelOneside(indr,indr);
+	  return new IscPoissonMicroModelOneside(indr,indt);
   };
   virtual double anomaly(intfloat* vec) {
 	  if (vec[indr].f*sumt < sumr*vec[indt].f)
@@ -125,7 +125,7 @@ public:
   virtual ~IscGammaMicroModel() {};
 
   virtual IscMicroModel* create() {
-	  return new IscGammaMicroModel(indr,indr);
+	  return new IscGammaMicroModel(indr,indt);
   };
 
   // Read out anomaly and log predicted prob
