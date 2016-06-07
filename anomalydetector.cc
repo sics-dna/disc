@@ -138,6 +138,30 @@ void AnomalyDetector::TrainOne(union intfloat* vec)
   }
 }
 
+/**
+ * Only works if no clustering is used and the anomaly training threshold is set to 0.0.
+ */
+void AnomalyDetector::UntrainOne(union intfloat* vec)
+{
+  int id;
+  IscComponent *c;
+  if (split_attr != -1 && vec[split_attr].i == -1 or clustering or thres > 0.0) {
+    return;
+// For now samples with unknown class are not handled
+// With semisupervised they should be handled but slightly different
+//    if (thres == 0)
+//      thres = isc->anomaly(vec+offset);
+//    c = isc->classify(vec+offset, thres);
+//    if (c)
+//      c->add(vec+offset);
+  } else {
+    id = (split_attr == -1 ? -1 : vec[split_attr].i);
+    c = isc->get_component(id, 0);
+    if(c)
+      c->remove(vec+offset);
+  }
+}
+
 void AnomalyDetector::TrainData(class DataObject* d)
 {
   int i, id, ch;

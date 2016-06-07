@@ -198,8 +198,8 @@ public:
 				if(gaussian_components[i]) {
 					delete gaussian_components[i];
 				}
-				delete [] gaussian_components;
 			}
+			delete [] gaussian_components;
 
 		}
 	}
