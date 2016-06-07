@@ -31,6 +31,7 @@ public:
   virtual void SetParams(int off, int splt, double th, int cl);
   virtual void Reset();
   virtual void TrainOne(union intfloat* vec);
+  virtual void UntrainOne(union intfloat* vec);
   virtual void TrainData(class DataObject* d);
   virtual void CalcAnomaly(class DataObject* d, double* devs);
   virtual void ClassifyData(class DataObject* d, int* cla, int* clu);

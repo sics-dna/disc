@@ -37,6 +37,7 @@
 #include "dynindvector.hh"
 #include "intfloat.hh"
 #include "isc_micromodel.hh"
+#include <stdio.h>
 
 // A Markov model of a multivariate Gaussian distribution.
 // That is, the state is described by a
@@ -51,6 +52,10 @@ struct IscMgdGaussComp {
 		var = new HMatrix(dim, 2);
 		var->unit();
 		var->scale(prior_v);
+	};
+	~IscMgdGaussComp() {
+		delete [] mean;
+		delete var;
 	};
 	double count;
 	double* mean;
@@ -73,7 +78,7 @@ public:
 	virtual double anomaly_acc() {
 		//double ddist = (numd == 0 ? 0.0 : (logp - logpmean)*(logp - logpmean)/logpvar);
 		//return -logintmultistudent(0.5*(5*(numo+numd)/(numc+1.0)), sqrt((sqdist*0.5 + ddist*0.67)/(5*(numo+numd)/(numc+1.0))), numc/* +1.0-1.0*/);
-		return -log(0.5*incgammaq(0.5, (sqdist*0.5))); // + ddist*0.67)));
+		return -log(incgammaq(0.5, sqdist*0.5)); // sqdist*0.5+ ddist*0.67)));
 		//return (logp < logpmean ? -log(0.5*incgammaq(0.5, ddist*0.5)) + 3.0 : 0.0);
 	};
 
@@ -111,22 +116,48 @@ public:
 		gdim_conditioned = conditional_variable_length;
 		gdim_tot = gdim_predicted+gdim_conditioned;
 
-
 		gindv = new int[gdim_tot];
-		for (int i=0; i<gdim_predicted; i++) {
-			gindv[i] = predicted_variable_index[i];
-		}
-		for (int i=gdim_predicted; i<gdim_tot; i++) {
+		// First elements in gindv are the conditional variables
+		for (int i=0; i<gdim_conditioned; i++) {
+			if(DEBUG)
+				printf("conditional_variable_index %i %i\n", i, conditional_variable_index[i]);
 			gindv[i] = conditional_variable_index[i];
 		}
+		// Last elements in gindv are the predicted variables
+		for (int i=0; i<gdim_predicted; i++) {
+			if(DEBUG)
+				printf("predicted_variable_index %i %i\n", i, predicted_variable_index[i]);
+			gindv[i+gdim_conditioned] = predicted_variable_index[i];
+		}
+
+		gaussian_component = new IscMgdGaussComp(gdim_tot, modelinfo.prior_n, modelinfo.prior_v);
+		if(DEBUG)
+			printf("IscMarkovGaussMicroModel created\n");
 	};
-	virtual ~IscMarkovGaussMicroModel() { delete [] gindv; };
+	virtual ~IscMarkovGaussMicroModel() {
+		if(DEBUG)
+			printf("IscMarkovGaussMicroModel deletion started\n");
+		if(gindv) {
+			delete [] gindv;
+		}
+		if(DEBUG)
+			printf("IscMarkovGaussMicroModel deletion next\n");
+
+		if(gaussian_component) {
+			delete gaussian_component;
+		}
+		if(DEBUG)
+			printf("IscMarkovGaussMicroModel deleted\n");
+	};
 
 	virtual IscMicroModel* create() {
+		if(DEBUG)
+			printf("Create a new IscMarkovGaussMicroModel with same arguments\n");
+
 		return new IscMarkovGaussMicroModel(
-				gindv,
+				(gindv+gdim_conditioned),
 				gdim_predicted,
-				(gindv+gdim_predicted*sizeof(int)),
+				gindv,
 				gdim_conditioned);
 	};
 
@@ -136,12 +167,17 @@ public:
 	virtual double anomaly(intfloat* vec) {
 		IscMgdAccumulator* acc = new IscMgdAccumulator();
 		add_acc(acc,vec);
-		return acc->anomaly_acc();
+		double ano= acc->anomaly_acc();
+		delete acc;
+		return ano;
 	};
 	virtual double logp(intfloat* vec) {
 		IscMgdAccumulator* acc = new IscMgdAccumulator();
 		add_acc(acc,vec);
-		return acc->logp_acc();
+		double logp_ = acc->logp_acc();
+		delete acc;
+		return logp_;
+
 	};
 
 	// NOT IMPLEMENTED
@@ -157,6 +193,7 @@ public:
 
 	virtual void reset();
 
+	// TODO check how this is effecting the gaussian component?
 	virtual void set_prior(double nn, double vv) {
 		modelinfo.prior_n = nn;
 		modelinfo.prior_v = vv;
@@ -180,28 +217,38 @@ protected:
 class IscMarkovGaussCombinerMicroModel : public IscMicroModel {
 public:
 	// New components are created internally, so the given components are not kept.
-	IscMarkovGaussCombinerMicroModel(IscMarkovGaussMicroModel** gaussian_components, int num_of_components) {
-		IscMarkovGaussMicroModel** comps = new IscMarkovGaussMicroModel*[num_of_components];
-		for(int i=0; i < num_of_components; i++) {
-			comps[i] = (IscMarkovGaussMicroModel*) gaussian_components[i]->create();
+	IscMarkovGaussCombinerMicroModel(IscMarkovGaussMicroModel** gaussian_components0, int num_of_components0) {
+		IscMarkovGaussMicroModel** comps = new IscMarkovGaussMicroModel*[num_of_components0];
+		for(int i=0; i < num_of_components0; i++) {
+			comps[i] = dynamic_cast<IscMarkovGaussMicroModel*>(gaussian_components0[i]->create());
 		}
 		this->gaussian_components=comps;
-		this->num_of_components=num_of_components;
-		this->accumulator = new IscMgdAccumulator();
+		this->num_of_components=num_of_components0;
+		//this->accumulator = new IscMgdAccumulator();
 	};
+
 	~IscMarkovGaussCombinerMicroModel() {
-		if(accumulator) {
-			delete accumulator;
+		//if(accumulator) {
+		//	delete accumulator;
+		//}
+		if(DEBUG) {
+			printf("IscMarkovGaussCombinerMicroModel delete started\n");
 		}
 		if(gaussian_components) {
 			for(int i=0; i < num_of_components; i++) {
 				if(gaussian_components[i]) {
 					delete gaussian_components[i];
 				}
-				delete [] gaussian_components;
 			}
 
+			delete [] gaussian_components;
+
 		}
+
+		if(DEBUG) {
+			printf("IscMarkovGaussCombinerMicroModel deleted\n");
+		}
+
 	}
 
 	virtual IscMicroModel* create() {
@@ -210,18 +257,18 @@ public:
 
 	// Read out anomaly and log predicted prob
 	virtual double anomaly(union intfloat* vec) {
-		accumulator->reset_acc();
+		accumulator.reset_acc();
 		for(int i=0; i < num_of_components; i++) {
-			gaussian_components[i]->add_acc(accumulator,vec);
+			gaussian_components[i]->add_acc(&accumulator,vec);
 		}
-		return accumulator->anomaly_acc();
+		return accumulator.anomaly_acc();
 	};
 	virtual double logp(union intfloat* vec) {
-		accumulator->reset_acc();
+		accumulator.reset_acc();
 		for(int i=0; i < num_of_components; i++) {
-			gaussian_components[i]->add_acc(accumulator,vec);
+			gaussian_components[i]->add_acc(&accumulator,vec);
 		}
-		return accumulator->logp_acc();
+		return accumulator.logp_acc();
 	}
 
 	// Training
@@ -244,7 +291,46 @@ public:
 protected:
 	IscMarkovGaussMicroModel** gaussian_components;
 	int num_of_components;
-	IscMgdAccumulator* accumulator;
+	IscMgdAccumulator accumulator;
+};
+
+
+class IscMarkovGaussMatrixMicroModel : public IscMicroModel {
+public:
+	//
+	//
+	IscMarkovGaussMatrixMicroModel(int* vector_index, int vector_length, int slots_per_row);
+	virtual ~IscMarkovGaussMatrixMicroModel();
+
+	// Should returns a micro model of the same class and with the same creation parameters as used when constructed.
+	virtual IscMicroModel* create() {
+		return new IscMarkovGaussMatrixMicroModel(vector_index, vector_length, slots_per_row);
+	};
+
+	// Read out anomaly and log predicted prob
+	virtual double anomaly(union intfloat* vec) {
+		return markovModel->anomaly(vec);
+	};
+	virtual double logp(union intfloat* vec) {
+		return markovModel->logp(vec);
+	};
+
+	// Training
+	virtual void add(union intfloat* vec) {
+		markovModel->add(vec);
+	};
+	virtual void remove(union intfloat* vec) {
+		markovModel->remove(vec);
+	};
+	virtual void reset() {
+		markovModel->reset();
+	};
+
+protected:
+	int* vector_index;
+	int vector_length;
+	int slots_per_row;
+	IscMarkovGaussCombinerMicroModel* markovModel;
 };
 
 

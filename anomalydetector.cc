@@ -1,4 +1,4 @@
- /*
+/*
  --------------------------------------------------------------------------
  Copyright (C) 2014, 2015 SICS Swedish ICT AB
 
@@ -61,7 +61,7 @@ protected:
   double thres;
   int clustering;
 };
-*/
+ */
 
 // no split/fix split/unknown split value
 // nothres/filtering/clustering/semisuperised
@@ -69,22 +69,22 @@ protected:
 
 AnomalyDetector::AnomalyDetector(int n, int off, int splt, double th, int cl)
 {
-  isc = 0;  // Subclasses should create the mixture with the appropriate micromodel creator func
-  len = n;
-  offset = off;
-  split_attr = splt;
-  thres = th;
-  clustering = cl;
+	isc = 0;  // Subclasses should create the mixture with the appropriate micromodel creator func
+	len = n;
+	offset = off;
+	split_attr = splt;
+	thres = th;
+	clustering = cl;
 }
 
 AnomalyDetector::AnomalyDetector(int n, int off, int splt, double th, int cl, IscCombinationRule cr, IscCreateFunc cf)
 {
-  len = n;
-  offset = off;
-  split_attr = splt;
-  thres = th;
-  clustering = cl;
-  isc = new IscMixture(len, cr, cf, this); 
+	len = n;
+	offset = off;
+	split_attr = splt;
+	thres = th;
+	clustering = cl;
+	isc = new IscMixture(len, cr, cf, this);
 }
 
 AnomalyDetector::AnomalyDetector()
@@ -93,267 +93,313 @@ AnomalyDetector::AnomalyDetector()
 
 AnomalyDetector::~AnomalyDetector()
 {
-  delete isc;
+	delete isc;
 }
 
 void AnomalyDetector::SetParams(int off, int splt, double th, int cl)
 {
-  offset = off;
-  split_attr = splt;
-  thres = th;
-  clustering = cl;
+	offset = off;
+	split_attr = splt;
+	thres = th;
+	clustering = cl;
 }
 
 void AnomalyDetector::Reset()
 {
-  isc->reset();
+	isc->reset();
 }
 
 void AnomalyDetector::TrainOne(union intfloat* vec)
 {
-  int id;
-  IscComponent *c;
-  if (split_attr != -1 && vec[split_attr].i == -1) {
-    return;
-// For now samples with unknown class are not handled
-// With semisupervised they should be handled but slightly different
-//    if (thres == 0)
-//      thres = isc->anomaly(vec+offset);
-//    c = isc->classify(vec+offset, thres);
-//    if (c)
-//      c->add(vec+offset);
-  } else {
-    id = (split_attr == -1 ? -1 : vec[split_attr].i);
-    if (clustering)
-      c = isc->classify(vec+offset, thres, id);
-    else
-      c = isc->get_component(id, 0);
-    if (!c){
-      c = isc->add_component(id);
-      c->reset();
-    }
+	int id;
+	IscComponent *c;
+	if (split_attr != -1 && vec[split_attr].i == -1) {
+		return;
+		// For now samples with unknown class are not handled
+		// With semisupervised they should be handled but slightly different
+		//    if (thres == 0)
+		//      thres = isc->anomaly(vec+offset);
+		//    c = isc->classify(vec+offset, thres);
+		//    if (c)
+		//      c->add(vec+offset);
+	} else {
+		id = (split_attr == -1 ? -1 : vec[split_attr].i);
+		if (clustering)
+			c = isc->classify(vec+offset, thres, id);
+		else
+			c = isc->get_component(id, 0);
+		if (!c){
+			c = isc->add_component(id);
+			c->reset();
+		}
 
-    if (thres == 0.0 || clustering || c->anomaly(vec+offset) <= thres)
-      c->add(vec+offset);
-  }
+		if (thres == 0.0 || clustering || c->anomaly(vec+offset) <= thres)
+			c->add(vec+offset);
+	}
+}
+
+/*
+ * This removes an example from the model. It only works if no clustering is used.
+ * It does not check that the example actually has been added, which only is garanteed
+ * to happen when the training threshold is zero.
+ */
+void AnomalyDetector::UntrainOne(union intfloat* vec)
+{
+	int id;
+	IscComponent *c;
+	if (split_attr != -1 && vec[split_attr].i == -1) {
+		return;
+		// For now samples with unknown class are not handled
+		// With semisupervised they should be handled but slightly different
+		//    if (thres == 0)
+		//      thres = isc->anomaly(vec+offset);
+		//    c = isc->classify(vec+offset, thres);
+		//    if (c)
+		//      c->add(vec+offset);
+	} else {
+		id = (split_attr == -1 ? -1 : vec[split_attr].i);
+
+		c = isc->get_component(id, 0);
+		if (c){
+			c->remove(vec+offset);
+		}
+	}
 }
 
 void AnomalyDetector::TrainData(class DataObject* d)
 {
-  int i, id, ch;
-  IscComponent *c;
-  intfloat* vec;
-  int* mark;
-  double* dev;
-  SortedDynamicIndexVector<int>* numclu_cla;
-  SortedDynamicIndexVector<double>* maxdev_cla;
-  double md, dummy;
-  int n = d->size();
-  int any;
-// Dont handle unknowns nor semisupervised for now
-  mark = new int[n];
-  dev = new double[n];
-  numclu_cla = new SortedDynamicIndexVector<int>(0);
-  maxdev_cla = new SortedDynamicIndexVector<double>(0.0);
-  for (i=0; i<n; i++)
-    mark[i] = 0;
-  do {
-    isc->reset();
-    ch = 0;
-    id = -1;
-    // training
-    for (i=0; i<n; i++) {
-      if (mark[i] == -1)
-        continue;
-      vec = (*d)[i];
-      if (split_attr != -1) {
-        if (vec[split_attr].i == -1) {
-          mark[i] = -1;
-          continue;
-        }
-        id = vec[split_attr].i;
-      } else
-        id = 0; // If no split, all belongs to class 0
-      c = isc->get_component(id, mark[i]);
-      if (!c) {
-        c = isc->add_component(id);
-        c->reset();
-        c->cluster_id = mark[i];
-      }
-      c->add(vec+offset);
-    }
-    if (thres == 0.0)
-      break;
-    // calculating anomalies
-    md = 0.0;
-    FORDIV(*maxdev_cla, dummy, id) (*maxdev_cla)[id] = 0.0;
-    FORDIV(*numclu_cla, dummy, id) (*numclu_cla)[id] = 0;
-    any = 0;
-    for (i=0; i<n; i++) {
-      if (mark[i] == -1)
-        continue;
-      any++;
-      vec = (*d)[i];
-      if (split_attr != -1)
-        id = vec[split_attr].i;
-      else
-        id = 0;
-      c = isc->classify_forced(vec+offset, thres, id, dev[i]);
-      if (id == -1) id = c->class_id;
-      if (dev[i] <= thres && c->cluster_id != mark[i]) {
-        ch = 1;
-        mark[i] = c->cluster_id;
-      }
-      if (mark[i] >= (*numclu_cla)[id])
-        (*numclu_cla)[id] = mark[i]+1;
-      if ((*maxdev_cla)[id] < dev[i])
-        (*maxdev_cla)[id] = dev[i];
-      if (md < dev[i])
-        md = dev[i];
-    }
-    if (any == 0 || (md <= thres && ch == 0)) {
-      if (clustering) {
-        any = 0;
-        for (i=0; i<n; i++)
-          if (mark[i] == -1) {
-            any++;
-            vec = (*d)[i];
-            if (split_attr != -1)
-              id = vec[split_attr].i;
-            if (id == -1)
-              id = 0;
-            mark[i] = (*numclu_cla)[id];
-          }
-        if (any < 20) // Hard wired limit... Should be configurable
-          break;
-        else
-          continue;
-      } else
-        break;
-    }
-    // Filter out those above upper threshold
-    md = (0.8 * md > thres ? 0.8 * md : thres);
-    for (i=0; i<n; i++) {
-      if (mark[i] == -1)
-        continue;
-      vec = (*d)[i];
-      if (split_attr != -1)
-        id = vec[split_attr].i;
-      if (id == -1)
-        id = 0;
-      if (!fp_is_normal(dev[i]) || dev[i] > md)
-        mark[i] = -1; // (clustering ? (*numclu_cla)[id] : -1);
-    }
-  } while (1);
-  delete [] mark;
-  delete [] dev;
-  delete maxdev_cla;
-  delete numclu_cla;
+	int i, id, ch;
+	IscComponent *c;
+	intfloat* vec;
+	int* mark;
+	double* dev;
+	SortedDynamicIndexVector<int>* numclu_cla;
+	SortedDynamicIndexVector<double>* maxdev_cla;
+	double md, dummy;
+	double rate = 1.0/20;
+	int n = d->size();
+	int any;
+	// Dont handle unknowns nor semisupervised for now
+	mark = new int[n];
+	dev = new double[n];
+	numclu_cla = new SortedDynamicIndexVector<int>(0);
+	maxdev_cla = new SortedDynamicIndexVector<double>(0.0);
+
+	if(DEBUG)
+		printf("Start training\n");
+
+	for (i=0; i<n; i++)
+		mark[i] = 0;
+	do {
+		isc->reset();
+		ch = 0;
+		id = -1;
+		// training
+		for (i=0; i<n; i++) {
+			if (mark[i] == -1)
+				continue;
+			vec = (*d)[i];
+			if (split_attr != -1) {
+				if (vec[split_attr].i == -1) {
+					mark[i] = -1;
+					continue;
+				}
+				id = vec[split_attr].i;
+			} else
+				id = 0; // If no split, all belongs to class 0
+			c = isc->get_component(id, mark[i]);
+			if (!c) {
+				if(DEBUG)
+					printf("Create new component %i\n", i);
+				c = isc->add_component(id);
+				if(DEBUG)
+					printf("Reset new component %i\n", i);
+				c->reset();
+				c->cluster_id = mark[i];
+			}
+			if(DEBUG)
+				printf("Add training instance %i\n", i);
+			c->add(vec+offset);
+		}
+		if (thres == 0.0)
+			break;
+		// calculating anomalies
+		md = 0.0;
+		FORDIV(*maxdev_cla, dummy, id) (*maxdev_cla)[id] = 0.0;
+		FORDIV(*numclu_cla, dummy, id) (*numclu_cla)[id] = 0;
+		any = 0;
+		for (i=0; i<n; i++) {
+			if (mark[i] == -1)
+				continue;
+			any++;
+			vec = (*d)[i];
+			if (split_attr != -1)
+				id = vec[split_attr].i;
+			else
+				id = 0;
+			c = isc->classify_forced(vec+offset, thres, id, dev[i]);
+			if (id == -1) id = c->class_id;
+			if (dev[i] <= thres && c->cluster_id != mark[i]) {
+				ch = 1;
+				mark[i] = c->cluster_id;
+			}
+			if (mark[i] >= (*numclu_cla)[id])
+				(*numclu_cla)[id] = mark[i]+1;
+			if ((*maxdev_cla)[id] < dev[i])
+				(*maxdev_cla)[id] = dev[i];
+			if (md < dev[i])
+				md = dev[i];
+		}
+
+		if (any == 0 || (md <= thres && ch == 0)) {
+			if (clustering) {
+				any = 0;
+				for (i=0; i<n; i++)
+					if (mark[i] == -1) {
+						any++;
+						vec = (*d)[i];
+						if (split_attr != -1)
+							id = vec[split_attr].i;
+						if (id == -1)
+							id = 0;
+						mark[i] = (*numclu_cla)[id];
+					}
+
+				if (any < 20) {// Hard wired limit... Should be configurable
+					break;
+				} else {
+					continue;
+				}
+			} else
+				break;
+		}
+
+		// Filter out those above upper threshold
+		md = (0.8 * md > thres ? 0.8 * md : thres);
+		for (i=0; i<n; i++) {
+			if (mark[i] == -1)
+				continue;
+			vec = (*d)[i];
+			if (split_attr != -1)
+				id = vec[split_attr].i;
+			if (id == -1)
+				id = 0;
+			if (!fp_is_normal(dev[i]) || dev[i] > md)
+				mark[i] = (clustering ? (*numclu_cla)[id] : -1);
+		}
+
+
+
+	} while (1);
+	delete [] mark;
+	delete [] dev;
+	delete maxdev_cla;
+	delete numclu_cla;
 }
 
 int countval(int* vec, int num, int val)
 {
-  int res = 0;
-  for (int i=0; i<num; i++)
-    if (vec[i] == val)
-      res++;
-  return res;
+	int res = 0;
+	for (int i=0; i<num; i++)
+		if (vec[i] == val)
+			res++;
+	return res;
 }
 
 void AnomalyDetector::CalcAnomaly(class DataObject* d, double* devs)
 {
-  int i, id = -1;
-  intfloat* vec;
-  int n = d->size();
-  for (i=0; i<n; i++) {
-    vec = (*d)[i];
-    if (split_attr != -1) {
-      id = vec[split_attr].i;
-//      if (id == -1) {
-//        devs[i] = 0.0;
-//        continue;
-//      }
-    }
-    devs[i] = isc->anomaly(vec+offset, id);
-  }
+	int i, id = -1;
+	intfloat* vec;
+	int n = d->size();
+	for (i=0; i<n; i++) {
+		vec = (*d)[i];
+		if (split_attr != -1) {
+			id = vec[split_attr].i;
+			//      if (id == -1) {
+			//        devs[i] = 0.0;
+			//        continue;
+			//      }
+		}
+		devs[i] = isc->anomaly(vec+offset, id);
+	}
 }
 
 void AnomalyDetector::ClassifyData(class DataObject* d, int* cla, int* clu)
 {
-  int i, id = -1;
-  intfloat* vec;
-  IscComponent* c;
-  int n = d->size();
-  for (i=0; i<n; i++) {
-    vec = (*d)[i];
-    if (split_attr != -1)
-      id = vec[split_attr].i;
-    c = isc->classify(vec+offset, thres, id);
-    if (c) {
-      if (cla) cla[i] = c->class_id;
-      if (clu) clu[i] = c->cluster_id;
-    } else {
-      if (cla) cla[i] = -1;
-      if (clu) clu[i] = -1;
-    }
-  }
+	int i, id = -1;
+	intfloat* vec;
+	IscComponent* c;
+	int n = d->size();
+	for (i=0; i<n; i++) {
+		vec = (*d)[i];
+		if (split_attr != -1)
+			id = vec[split_attr].i;
+		c = isc->classify(vec+offset, thres, id);
+		if (c) {
+			if (cla) cla[i] = c->class_id;
+			if (clu) clu[i] = c->cluster_id;
+		} else {
+			if (cla) cla[i] = -1;
+			if (clu) clu[i] = -1;
+		}
+	}
 }
 
 
 int AnomalyDetector::CalcAnomalyDetails(union intfloat* vec, double& anom, int& cla, int& clu, double* devs, union intfloat* peak, union intfloat* min, union intfloat* max, double* expect, double* var)
 {
-  int ok, id = -1;
-  int flags = 0;
-  IscComponent* c;
-  if (split_attr != -1)
-    id = vec[split_attr].i;
-  c = isc->classify_forced(vec+offset, thres, id, anom);
-  if (!c) return flags;
-  cla = c->class_id;
-  clu = c->cluster_id;
-  flags |= 7;
-  if (devs) {
-    ok = c->partsanomaly(vec+offset, devs);
-    if (ok)
-      flags |= 8;
-  }
-  if (peak || (min && max)) {
-    ok = c->invanomaly(vec+offset, thres, (min ? min+offset : 0), (max ? max+offset : 0), (peak ? peak+offset : 0));
-    if (ok)
-      flags |= ((min && max) ? 48 : 0) | (peak ? 64 : 0);
-  }
-  if (expect || var) {
-    ok = c->stats(vec+offset, (expect ? expect+offset : 0), (var ? var+offset : 0));
-    if (ok)
-      flags |= (expect ? 128 : 0) | (var ? 256 : 0);
-  }
-  return flags;
+	int ok, id = -1;
+	int flags = 0;
+	IscComponent* c;
+	if (split_attr != -1)
+		id = vec[split_attr].i;
+	c = isc->classify_forced(vec+offset, thres, id, anom);
+	if (!c) return flags;
+	cla = c->class_id;
+	clu = c->cluster_id;
+	flags |= 7;
+	if (devs) {
+		ok = c->partsanomaly(vec+offset, devs);
+		if (ok)
+			flags |= 8;
+	}
+	if (peak || (min && max)) {
+		ok = c->invanomaly(vec+offset, thres, (min ? min+offset : 0), (max ? max+offset : 0), (peak ? peak+offset : 0));
+		if (ok)
+			flags |= ((min && max) ? 48 : 0) | (peak ? 64 : 0);
+	}
+	if (expect || var) {
+		ok = c->stats(vec+offset, (expect ? expect+offset : 0), (var ? var+offset : 0));
+		if (ok)
+			flags |= (expect ? 128 : 0) | (var ? 256 : 0);
+	}
+	return flags;
 }
 
 
 int AnomalyDetector::CalcAnomalyDetailsSingle(union intfloat* vec, int mmind, int cla, int clu, double* devs, union intfloat* peak, union intfloat* min, union intfloat* max, double* expect, double* var)
 {
-  int ok;
-  int flags = 0;
-  IscComponent* c;
-  c = isc->get_component(cla, clu);
-  if (!c) return flags;
-  if (mmind < 0 || mmind >= c->nummicromodels()) return flags;
-  if (devs) {
-    devs[mmind] = c->micromodel(mmind)->anomaly(vec+offset);
-    flags |= 8;
-  }
-  if (peak || (min && max)) {
-    ok = c->micromodel(mmind)->invanomaly(vec+offset, thres, (min ? min+offset : 0), (max ? max+offset : 0), (peak ? peak+offset : 0));
-    if (ok)
-      flags |= ((min && max) ? 48 : 0) | (peak ? 64 : 0);
-  }
-  if (expect || var) {
-    ok = c->micromodel(mmind)->stats(vec+offset, (expect ? expect+offset : 0), (var ? var+offset : 0));
-    if (ok)
-      flags |= (expect ? 128 : 0) | (var ? 256 : 0);
-  }
-  return flags;
+	int ok;
+	int flags = 0;
+	IscComponent* c;
+	c = isc->get_component(cla, clu);
+	if (!c) return flags;
+	if (mmind < 0 || mmind >= c->nummicromodels()) return flags;
+	if (devs) {
+		devs[mmind] = c->micromodel(mmind)->anomaly(vec+offset);
+		flags |= 8;
+	}
+	if (peak || (min && max)) {
+		ok = c->micromodel(mmind)->invanomaly(vec+offset, thres, (min ? min+offset : 0), (max ? max+offset : 0), (peak ? peak+offset : 0));
+		if (ok)
+			flags |= ((min && max) ? 48 : 0) | (peak ? 64 : 0);
+	}
+	if (expect || var) {
+		ok = c->micromodel(mmind)->stats(vec+offset, (expect ? expect+offset : 0), (var ? var+offset : 0));
+		if (ok)
+			flags |= (expect ? 128 : 0) | (var ? 256 : 0);
+	}
+	return flags;
 }
 
 
