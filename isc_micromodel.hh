@@ -23,6 +23,9 @@
 #define IscMicroModel_HH_
 #include "intfloat.hh"
 
+#ifndef DEBUG
+#define DEBUG 0
+#endif
 
 
 class IscMicroModel {

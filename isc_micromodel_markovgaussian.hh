@@ -78,7 +78,6 @@ public:
 	virtual double anomaly_acc() {
 		//double ddist = (numd == 0 ? 0.0 : (logp - logpmean)*(logp - logpmean)/logpvar);
 		//return -logintmultistudent(0.5*(5*(numo+numd)/(numc+1.0)), sqrt((sqdist*0.5 + ddist*0.67)/(5*(numo+numd)/(numc+1.0))), numc/* +1.0-1.0*/);
-		printf("sqdist=%f\n",sqdist);
 		return -log(incgammaq(0.5, sqdist*0.5)); // sqdist*0.5+ ddist*0.67)));
 		//return (logp < logpmean ? -log(0.5*incgammaq(0.5, ddist*0.5)) + 3.0 : 0.0);
 	};
