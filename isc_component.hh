@@ -26,7 +26,7 @@
 
 typedef class IscMicroModel* (*IscCreateFunc)(const void* co, int ind);
 
-enum IscCombinationRule { IscMax, IscPlus, IscBoth };
+enum IscCombinationRule { IscMin, IscMax, IscPlus, IscBoth };
 
 class IscComponent {
 public:

@@ -34,6 +34,9 @@
 #include "intfloat.hh"
 #include "isc_micromodel.hh"
 #include "isc_micromodel_multigaussian.hh"
+#include <stdio.h>
+
+#define DEBUG 1
 
 /*
 // The one doing all the calculations. The rest are just wrappers.
@@ -124,8 +127,11 @@ protected:
 
 double IscRawMultiGaussianMicroModel::raw_anomaly(double r, double n, int d)
 {
-  return (r==0.0 ? 0.0 : r < 0.0 ? 700.0 :
-          -logintmultistudent(0.5*n, sqrt(r), d-1.0));
+	float anom = (r==0.0 ? 0.0 : r < 0.0 ? 700.0 :
+	          -logintmultistudent(0.5*n, sqrt(r), d-1.0));
+	if(DEBUG && anom >= 700)
+		printf("%f %f %i %f\n", r, n, d, anom);
+  return anom;
 }
 
 double IscRawMultiGaussianMicroModel::raw_logp(double r, double dt, double n, int d)

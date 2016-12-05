@@ -21,6 +21,18 @@
 
 #include "isc_micromodel.hh"
 #include "isc_component.hh"
+<<<<<<< HEAD
+#include <math.h>
+#ifdef WIN32
+#define _USE_MATH_DEFINES
+#include <cmath>
+#include <FLOAT.H>
+#ifndef HUGE_VALF
+#define HUGE_VALF FLT_MAX
+#endif
+#endif
+=======
+>>>>>>> master
 #include <stdio.h>
 /*
 typedef class IscMicroModel* (*IscCreateFunc)(const void* co, int ind);
@@ -91,17 +103,28 @@ IscComponent::~IscComponent()
 double IscComponent::anomaly(intfloat* vec)
 {
   int i;
-  double as, am, a;
-  as = am = 0.0;
+  double anomaly_sum, anomaly_max, a, anomaly_min;
+  anomaly_sum = anomaly_max = 0.0;
+  anomaly_min = -HUGE_VALF;
   for (i=0; i<len; i++) {
     a = micro[i]->anomaly(vec);
-    as += a;
-    if (a > am) am = a;
+
+    if(a > 700 ){
+    	printf("Anom: %.2f\n",a);
+    }
+    a = (a < HUGE_VALF)?a:700;  // 700 is the highest anomaly value except HUGE_VALF...?
+
+    anomaly_sum += a;
+
+    if (a > anomaly_max) anomaly_max = a;
+    if (a < anomaly_min) anomaly_min = a;
   }
   if (comb == IscMax)  // The below is wrong - both numbers should be adjusted
-    return am;
+	  return anomaly_max;
+  else if (comb == IscMin)
+	  return anomaly_min;
   else
-    return as;
+	  return anomaly_sum;
 }
 
 double IscComponent::logp(intfloat* vec)
