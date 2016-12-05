@@ -165,6 +165,11 @@ public:
 		IscMgdAccumulator* acc = new IscMgdAccumulator();
 		add_acc(acc,vec);
 		double ano= acc->anomaly_acc();
+		if(ano >= 700) {
+			printf("Ano0: %.1f", ano);
+		}
+		ano = (ano < HUGE_VALF)?ano:700;
+
 		delete acc;
 		return ano;
 	};

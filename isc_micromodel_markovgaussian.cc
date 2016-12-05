@@ -62,8 +62,8 @@ void IscMarkovGaussMicroModel::remove(intfloat* vec) {
 	gmod->count -= 1.0;
 	for (int i=0; i<gdim_tot; i++)
 		gmod->mean[i] -= tmp[i]/gmod->count;
-	gmod->var->accum(tmp, -1.0/gmod->count);
 	gmod->var->scale((gmod->count + 1.0)/gmod->count);
+	gmod->var->accum(tmp, -1.0/gmod->count);
 
 	delete [] tmp;
 };
@@ -100,7 +100,7 @@ IscMarkovGaussMatrixMicroModel::IscMarkovGaussMatrixMicroModel(int* vector_index
 
 	for(int i=0; i < vector_length; i++) {
 		int *predicted_index = new int[1];
-		predicted_index[0] = i;
+		predicted_index[0] = vector_index[i];
 		int predicted_length =1;
 
 		int *condiction_index;
@@ -109,7 +109,7 @@ IscMarkovGaussMatrixMicroModel::IscMarkovGaussMatrixMicroModel(int* vector_index
 		if((i+1) % slots_per_row == 0) { // If last element on a row
 			if(i < vector_length-slots_per_row) { // Not the last row in the matrix
 				condiction_index = new int[1];
-				condiction_index[0] = i+slots_per_row; // Row below
+				condiction_index[0] = vector_index[i+slots_per_row]; // Row below
 				condition_length = 1;
 			} else { // If last element of the last row in the matrix
 				condiction_index = new int[0]; // No conditioning
@@ -117,12 +117,12 @@ IscMarkovGaussMatrixMicroModel::IscMarkovGaussMatrixMicroModel(int* vector_index
 			}
 		} else if ( i >=  vector_length-slots_per_row) { // If last row in the matrix
 			condiction_index = new int[1];
-			condiction_index[0] = i+1; // Element to the right.
+			condiction_index[0] = vector_index[i+1]; // Element to the right.
 			condition_length = 1;
 		} else {
 			condiction_index = new int[2];
-			condiction_index[0] = i+1;// Element to the left
-			condiction_index[1] = i+slots_per_row; // and to below.
+			condiction_index[0] = vector_index[i+1];// Element to the left
+			condiction_index[1] = vector_index[i+slots_per_row]; // and to below.
 			condition_length = 2;
 		}
 		if(DEBUG)
