@@ -21,6 +21,7 @@
 
 #include "isc_micromodel.hh"
 #include "isc_component.hh"
+<<<<<<< HEAD
 #include <math.h>
 #ifdef WIN32
 #define _USE_MATH_DEFINES
@@ -30,6 +31,8 @@
 #define HUGE_VALF FLT_MAX
 #endif
 #endif
+=======
+>>>>>>> master
 #include <stdio.h>
 /*
 typedef class IscMicroModel* (*IscCreateFunc)(const void* co, int ind);
@@ -78,8 +81,14 @@ IscComponent::IscComponent(int cla, int clu, int ll, IscCombinationRule cr, IscC
   len = ll;
   comb = cr;
   micro = new IscMicroModel*[len];
-  for (i=0; i<len; i++)
-    micro[i] = cf(co, i);
+  for (i=0; i<len; i++) {
+	  if(DEBUG) {
+		  printf("Call create function\n");
+	  }
+	  micro[i] = cf(co, i);
+  }
+  if(DEBUG)
+	  printf("Finshed calling create function\n");
   next = 0;
 }
 

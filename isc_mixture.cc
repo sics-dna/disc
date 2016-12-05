@@ -23,6 +23,7 @@
 #include "dynindvector.hh"
 #include "isc_component.hh"
 #include "isc_mixture.hh"
+#include <stdio.h>
 
 #ifdef WIN32
 #include <FLOAT.H>
@@ -93,6 +94,8 @@ IscComponent* IscMixture::add_component(int id)
     if (clu <= c1->cluster_id)
       clu = c1->cluster_id+1;
   c1 = new IscComponent(id, clu, len, comb, createfunc, createobj);
+  if(DEBUG)
+	  printf("ADD NEW COMPONENT\n");
   if (!c2) {
     (*components)[id] = c1;
   } else {

@@ -27,6 +27,9 @@
 #define DEBUG 0
 #endif
 
+#ifndef DEBUG
+#define DEBUG 0
+#endif
 
 class IscMicroModel {
 public:
