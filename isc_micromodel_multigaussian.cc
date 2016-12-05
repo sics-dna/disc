@@ -36,7 +36,7 @@
 #include "isc_micromodel_multigaussian.hh"
 #include <stdio.h>
 
-#define DEBUG 1
+#define DEBUG 0
 
 /*
 // The one doing all the calculations. The rest are just wrappers.
