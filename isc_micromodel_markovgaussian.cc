@@ -25,13 +25,8 @@
 void IscMarkovGaussMicroModel::add_acc(IscMgdAccumulator *acc, intfloat* vec) {
 	double *tmp = new double[gdim_tot];
 	IscMgdGaussComp* gmod = getGaussComponent();
-<<<<<<< HEAD
     for (int i=0; i<gdim_tot; i++)
     	tmp[i] = vec[gindv[i]].f - gmod->mean[i];
-=======
-	for (int i=0; i<gdim_tot; i++)
-		tmp[i] = vec[gindv[i]].f - gmod->mean[i];
->>>>>>> master
 
 	acc->sqdist += gmod->var->sqprodinv_cond(tmp, gdim_conditioned);
 	acc->logdet += log(gmod->var->det_cond(gdim_conditioned));
@@ -105,11 +100,7 @@ IscMarkovGaussMatrixMicroModel::IscMarkovGaussMatrixMicroModel(int* vector_index
 
 	for(int i=0; i < vector_length; i++) {
 		int *predicted_index = new int[1];
-<<<<<<< HEAD
 		predicted_index[0] = vector_index[i];
-=======
-		predicted_index[0] = i;
->>>>>>> master
 		int predicted_length =1;
 
 		int *condiction_index;
@@ -118,11 +109,7 @@ IscMarkovGaussMatrixMicroModel::IscMarkovGaussMatrixMicroModel(int* vector_index
 		if((i+1) % slots_per_row == 0) { // If last element on a row
 			if(i < vector_length-slots_per_row) { // Not the last row in the matrix
 				condiction_index = new int[1];
-<<<<<<< HEAD
 				condiction_index[0] = vector_index[i+slots_per_row]; // Row below
-=======
-				condiction_index[0] = i+slots_per_row; // Row below
->>>>>>> master
 				condition_length = 1;
 			} else { // If last element of the last row in the matrix
 				condiction_index = new int[0]; // No conditioning
@@ -130,21 +117,12 @@ IscMarkovGaussMatrixMicroModel::IscMarkovGaussMatrixMicroModel(int* vector_index
 			}
 		} else if ( i >=  vector_length-slots_per_row) { // If last row in the matrix
 			condiction_index = new int[1];
-<<<<<<< HEAD
 			condiction_index[0] = vector_index[i+1]; // Element to the right.
 			condition_length = 1;
 		} else {
 			condiction_index = new int[2];
 			condiction_index[0] = vector_index[i+1];// Element to the left
 			condiction_index[1] = vector_index[i+slots_per_row]; // and to below.
-=======
-			condiction_index[0] = i+1; // Element to the right.
-			condition_length = 1;
-		} else {
-			condiction_index = new int[2];
-			condiction_index[0] = i+1;// Element to the right
-			condiction_index[1] = i+slots_per_row; // and to below.
->>>>>>> master
 			condition_length = 2;
 		}
 		if(DEBUG)
@@ -154,11 +132,7 @@ IscMarkovGaussMatrixMicroModel::IscMarkovGaussMatrixMicroModel(int* vector_index
 				predicted_length,
 				condiction_index,
 				condition_length
-<<<<<<< HEAD
 				);
-=======
-		);
->>>>>>> master
 
 		delete [] predicted_index;
 		delete [] condiction_index;
@@ -182,7 +156,6 @@ IscMarkovGaussMatrixMicroModel::IscMarkovGaussMatrixMicroModel(int* vector_index
 }
 
 IscMarkovGaussMatrixMicroModel::~IscMarkovGaussMatrixMicroModel() {
-<<<<<<< HEAD
 		if(markovModel) {
 			delete markovModel;
 		}
@@ -190,24 +163,3 @@ IscMarkovGaussMatrixMicroModel::~IscMarkovGaussMatrixMicroModel() {
 			delete [] vector_index;
 		}
 	}
-=======
-	if(DEBUG) {
-		printf("IscMarkovGaussMatrixMicroModel delete started\n");
-	}
-	if(markovModel) {
-		delete markovModel;
-	}
-
-	if(DEBUG) {
-		printf("IscMarkovGaussMatrixMicroModel delete next\n");
-	}
-
-	if(vector_index) {
-		delete [] vector_index;
-	}
-
-	if(DEBUG) {
-		printf("IscMarkovGaussMatrixMicroModel deleted\n");
-	}
-}
->>>>>>> master

@@ -32,10 +32,7 @@ public:
   virtual void Reset();
   virtual void TrainOne(union intfloat* vec);
   virtual void UntrainOne(union intfloat* vec);
-<<<<<<< HEAD
 
-=======
->>>>>>> master
   virtual void TrainData(class DataObject* d);
   virtual void CalcAnomaly(class DataObject* d, double* devs);
   virtual void ClassifyData(class DataObject* d, int* cla, int* clu);
