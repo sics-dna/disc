@@ -100,10 +100,10 @@ double IscComponent::anomaly(intfloat* vec)
   for (i=0; i<len; i++) {
     a = micro[i]->anomaly(vec);
 
-    if(a > 700 ){
+    if(DEBUG && a > 700 ){
     	printf("Anom: %.2f\n",a);
     }
-    a = (a < HUGE_VALF)?a:700;  // 700 is the highest anomaly value except HUGE_VALF...?
+    a = (a < HUGE_VALF)?a:1000;  //if not a limited value
 
     anomaly_sum += a;
 
