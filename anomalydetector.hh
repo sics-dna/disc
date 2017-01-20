@@ -1,6 +1,6 @@
  /*
  --------------------------------------------------------------------------
- Copyright (C) 2014, 2015 SICS Swedish ICT AB
+ Copyright (C) 2014, 2015, 2016, 2017 SICS Swedish ICT AB
 
  Main author: Anders Holst <aho@sics.se>
 

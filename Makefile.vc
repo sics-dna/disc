@@ -17,7 +17,7 @@ LIB = lib.exe
 CXXFLAGS = -DWIN32 -D_CRT_SECURE_NO_DEPRECATE /MTd /Z7 /nologo /I../dataformat 
 #CXXFLAGS = -DWIN32 -D_CRT_SECURE_NO_DEPRECATE -DINTFLOAT_LONG /MTd /Z7 /nologo /I../dataformat
 
-OBJS = anomalydetector.obj isc_mixture.obj isc_component.obj isc_micromodel_poissongamma.obj isc_micromodel_gaussian.obj isc_micromodel_multigaussian.obj isc_micromodel_markovgaussian.obj hmatrix.obj gamma.obj hgf.obj
+OBJS = anomalydetector.obj isc_mixture.obj isc_component.obj isc_micromodel_poissongamma.obj isc_micromodel_gaussian.obj isc_micromodel_multigaussian.obj  hmatrix.obj gamma.obj hgf.obj
 
 all: isc.lib
 
