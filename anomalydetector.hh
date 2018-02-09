@@ -27,6 +27,8 @@ public:
   AnomalyDetector();
   AnomalyDetector(int n, int off, int splt, double th, int cl);  // Sublasses must know the numbers and types of micromodels
   AnomalyDetector(int n, int off, int splt, double th, int cl, IscCombinationRule cr, IscCreateFunc cf);  // Or a creation function for the appropriate micromodels can be used
+
+
   virtual ~AnomalyDetector();
   virtual void SetParams(int off, int splt, double th, int cl);
   virtual void Reset();
@@ -38,6 +40,7 @@ public:
   virtual void ClassifyData(class DataObject* d, int* cla, int* clu);
   virtual int CalcAnomalyDetails(union intfloat* vec, double& anom, int& cla, int& clu, double* devs=0, union intfloat* peak=0, union intfloat* min=0, union intfloat* max=0, double* expect=0, double* var=0);
   virtual int CalcAnomalyDetailsSingle(union intfloat* vec, int mmind, int cla, int clu, double* devs=0, union intfloat* peak=0, union intfloat* min=0, union intfloat* max=0, double* expect=0, double* var=0);
+
 
 protected:
   IscMixture* isc;

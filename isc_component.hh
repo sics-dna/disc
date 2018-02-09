@@ -23,15 +23,18 @@
 #define IscComponent_HH_
 
 #include "isc_micromodel.hh"
+#include "isc_exporter.hh"
 
 typedef class IscMicroModel* (*IscCreateFunc)(const void* co, int ind);
-
-enum IscCombinationRule { IscMin, IscMax, IscPlus, IscBoth };
 
 class IscComponent {
 public:
   IscComponent(int cla, int clu, int ll, IscCombinationRule cr, IscCreateFunc cf, void* co);
+  IscComponent(AbstractModelExporter exporter, IscCreateFunc cf, void* co);
+
   virtual ~IscComponent();
+
+  virtual void exportModel(AbstractModelExporter exporter);
 
   // Read out anomaly and log predicted prob
   virtual double anomaly(union intfloat* vec);

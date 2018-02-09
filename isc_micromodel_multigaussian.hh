@@ -44,6 +44,39 @@ public:
 	  return new IscMultiGaussianMicroModel(dim, indv);
   }
 
+  IscMultiGaussianMicroModel(AbstractModelExporter exporter) {
+	  int i;
+	  int d;
+	  exporter.fillParameter("dim", d);
+	  dim = d;
+	  indv = new int[d];
+	  exporter.fillParameter("indv", indv, d);
+	  sumx = new double[d];
+	  exporter.fillParameter("sumx", sumx, d);
+	  AbstractModelExporter sumxxExporter = exporter.getParameterModel("sumxx");
+	  sumxx = new HMatrix(sumxxExporter);
+	  mean = new double[d];
+	  exporter.fillParameter("mean", mean, d);
+	  AbstractModelExporter varExporter = exporter.getParameterModel("var");
+	  var = new HMatrix(varExporter);
+	  dirty = 1;
+	  n = 0.0;
+	  prior_n = 0.0;
+	  prior_var = 0.0;
+  }
+
+  virtual void exportModel(AbstractModelExporter exporter) {
+	  exporter.setMicroModelName("IscMultiGaussianMicroModel");
+	  exporter.addParameter("dim", dim);
+	  exporter.addParameter("indv", indv, dim);
+
+	  AbstractModelExporter sumxxExporter = exporter.createModelExporter("sumxx");
+	  sumxx->exportHMatrix(sumxxExporter);
+	  exporter.addParameter("mean", mean, dim);
+	  AbstractModelExporter varExporter = exporter.createModelExporter("var");
+	  var->exportHMatrix(varExporter);
+  }
+
   // Read out anomaly and log predicted prob
   virtual double anomaly(intfloat* vec) { update(); return raw_anomaly(dist(vec), n, dim); };
   virtual double logp(intfloat* vec) { update(); return raw_logp(dist(vec), var->det(), n, dim); };

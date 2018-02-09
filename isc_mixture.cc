@@ -1,4 +1,4 @@
- /*
+/*
  --------------------------------------------------------------------------
  Copyright (C) 2011, 2015 SICS Swedish ICT AB
 
@@ -58,209 +58,237 @@ protected:
   void* createobj;
   class DynamicIndexVector<IscComponent*>* components;
 };
-*/
+ */
 
 
 IscMixture::IscMixture(int ll, IscCombinationRule cr, IscCreateFunc cf, void* co)
 {
-  num = 0;
-  len = ll;
-  comb = cr;
-  createfunc = cf;
-  createobj = co;
-  components = new DynamicIndexVector<IscComponent*>(0);
+	num = 0;
+	len = ll;
+	comb = cr;
+	createfunc = cf;
+	createobj = co;
+	components = new DynamicIndexVector<IscComponent*>(0);
+}
+
+
+IscMixture::IscMixture(AbstractModelExporter exporter, IscCreateFunc cf, void* co)
+{
+	exporter.fillParameter("comb", comb);
+	exporter.fillParameter("len", len);
+	exporter.fillParameter("num", num);
+	createfunc = cf;
+	createobj = co;
+	components = new DynamicIndexVector<IscComponent*>(0);
 }
 
 IscMixture::~IscMixture()
 {
-  IscComponent *c1, *c2;
-  int ind;
-  FORDIV((*components), c1, ind)
-    for (c2=0; c1; c1=c2) {
-      c2 = c1->next;
-      delete c1;
-    }
-  delete components;
+	IscComponent *c1, *c2;
+	int ind;
+	FORDIV((*components), c1, ind)
+	for (c2=0; c1; c1=c2) {
+		c2 = c1->next;
+		delete c1;
+	}
+	delete components;
+}
+
+
+void IscMixture::exportModel(AbstractModelExporter exporter) {
+	exporter.addParameter("comb", comb);
+	exporter.addParameter("len", len);
+	exporter.addParameter("num", num);
+
+	IscComponent* c;
+	int ind;
+	FORDIV((*components), c, ind)
+	int i=0;
+	for (; c; c=c->next) {
+		AbstractModelExporter compExporter = exporter.createModelExporter(new char[]{(char)i});
+		c->exportComponent(compExporter);
+		i++;
+	}
 }
 
 IscComponent* IscMixture::add_component(int id)
 {
-  IscComponent *c1, *c2;
-  int clu = 0;
-  c2 = 0;
-  c1 = (*components)[id];
-  for (; c1; c2=c1, c1=c1->next)
-    if (clu <= c1->cluster_id)
-      clu = c1->cluster_id+1;
-  c1 = new IscComponent(id, clu, len, comb, createfunc, createobj);
-  if (!c2) {
-    (*components)[id] = c1;
-  } else {
-    c2->next = c1;
-  }
-  num++;
-  return c1;
+	IscComponent *c1, *c2;
+	int clu = 0;
+	c2 = 0;
+	c1 = (*components)[id];
+	for (; c1; c2=c1, c1=c1->next)
+		if (clu <= c1->cluster_id)
+			clu = c1->cluster_id+1;
+	c1 = new IscComponent(id, clu, len, comb, createfunc, createobj);
+	if (!c2) {
+		(*components)[id] = c1;
+	} else {
+		c2->next = c1;
+	}
+	num++;
+	return c1;
 }
 
 void IscMixture::remove_component(IscComponent* c)
 {
-  IscComponent *c1, *c2;
-  c1 = (*components)[c->class_id];
-  if (c1) {
-    for (c2=0; c1 && c1 != c; c2=c1, c1=c1->next);
-    if (c2)
-      c2->next = c1->next;
-    else
-      (*components)[c->class_id] = c1->next;
-    delete c1;
-    num--;
-  }
+	IscComponent *c1, *c2;
+	c1 = (*components)[c->class_id];
+	if (c1) {
+		for (c2=0; c1 && c1 != c; c2=c1, c1=c1->next);
+		if (c2)
+			c2->next = c1->next;
+		else
+			(*components)[c->class_id] = c1->next;
+		delete c1;
+		num--;
+	}
 }
 
 IscComponent* IscMixture::get_component(int cla, int clu)
 {
-  IscComponent* c;
-  for (c=(*components)[cla]; c && (c->cluster_id != clu); c=c->next);
-  return c;
+	IscComponent* c;
+	for (c=(*components)[cla]; c && (c->cluster_id != clu); c=c->next);
+	return c;
 }
 
 IscComponent* IscMixture::nth_component(int n)
 {
-  int i = 0, ind;
-  IscComponent* c=0;
-  FORDIV((*components), c, ind) {
-    for (; c && i < n; c=c->next, i++);
-  }
-  return c;
+	int i = 0, ind;
+	IscComponent* c=0;
+	FORDIV((*components), c, ind) {
+		for (; c && i < n; c=c->next, i++);
+	}
+	return c;
 }
 
 double IscMixture::anomaly(intfloat* vec, int id)
 {
-  IscComponent* c;
-  double a, am;
-  int ind;
-  am = HUGE_VALF;
-  if (id == -1) {
-    FORDIV((*components), c, ind)
-      for (; c; c=c->next) {
-        a = c->anomaly(vec);
-        if (a < am) am = a;
-      }
-  } else {
-    if (0 == (*components)[id])
-      return 0.0;
-    for (c=(*components)[id]; c; c=c->next) {
-      a = c->anomaly(vec);
-      if (a < am) am = a;
-    }
-  }
-  return am;
+	IscComponent* c;
+	double a, am;
+	int ind;
+	am = HUGE_VALF;
+	if (id == -1) {
+		FORDIV((*components), c, ind)
+    		  for (; c; c=c->next) {
+    			  a = c->anomaly(vec);
+    			  if (a < am) am = a;
+    		  }
+	} else {
+		if (0 == (*components)[id])
+			return 0.0;
+		for (c=(*components)[id]; c; c=c->next) {
+			a = c->anomaly(vec);
+			if (a < am) am = a;
+		}
+	}
+	return am;
 }
 
 double IscMixture::logp(intfloat* vec, int id)
 {
-  IscComponent* c;
-  double lp, lpm;
-  int ind;
-  lpm = -HUGE_VALF;
-  if (id == -1) {
-    FORDIV((*components), c, ind)
-      for (; c; c=c->next) {
-        lp = c->logp(vec);
-        if (lp > lpm) lpm = lp;
-      }
-  } else {
-    for (c=(*components)[id]; c; c=c->next) {
-      lp = c->logp(vec);
-      if (lp > lpm) lpm = lp;
-    }
-  }
-  return lpm;
+	IscComponent* c;
+	double lp, lpm;
+	int ind;
+	lpm = -HUGE_VALF;
+	if (id == -1) {
+		FORDIV((*components), c, ind)
+    		  for (; c; c=c->next) {
+    			  lp = c->logp(vec);
+    			  if (lp > lpm) lpm = lp;
+    		  }
+	} else {
+		for (c=(*components)[id]; c; c=c->next) {
+			lp = c->logp(vec);
+			if (lp > lpm) lpm = lp;
+		}
+	}
+	return lpm;
 }
 
 IscComponent* IscMixture::classify(intfloat* vec, double th, int id)
 {
-  IscComponent* c;
-  IscComponent* cm = 0;
-  double a, lp, lpm;
-  int ind;
-  lpm = -HUGE_VALF;
-  if (id == -1) {
-    FORDIV((*components), c, ind)
-      for (; c; c=c->next) {
-        a = c->anomaly(vec);
-        if (a <= th) {
-          lp = c->logp(vec);
-          if (lp > lpm) {
-            lpm = lp;
-            cm = c;
-          }
-        }
-      }
-  } else {
-    for (c=(*components)[id]; c; c=c->next) {
-      a = c->anomaly(vec);
-      if (a <= th) {
-        lp = c->logp(vec);
-        if (lp > lpm) {
-          lpm = lp;
-          cm = c;
-        }
-      }
-    }
-  }
-  return cm;
+	IscComponent* c;
+	IscComponent* cm = 0;
+	double a, lp, lpm;
+	int ind;
+	lpm = -HUGE_VALF;
+	if (id == -1) {
+		FORDIV((*components), c, ind)
+    		  for (; c; c=c->next) {
+    			  a = c->anomaly(vec);
+    			  if (a <= th) {
+    				  lp = c->logp(vec);
+    				  if (lp > lpm) {
+    					  lpm = lp;
+    					  cm = c;
+    				  }
+    			  }
+    		  }
+	} else {
+		for (c=(*components)[id]; c; c=c->next) {
+			a = c->anomaly(vec);
+			if (a <= th) {
+				lp = c->logp(vec);
+				if (lp > lpm) {
+					lpm = lp;
+					cm = c;
+				}
+			}
+		}
+	}
+	return cm;
 }
 
 IscComponent* IscMixture::classify_forced(intfloat* vec, double th, int id, double& anom)
 {
-  IscComponent* c;
-  IscComponent* cm = 0;
-  double a, lp, lpm;
-  int ind;
-  lpm = -HUGE_VALF;
-  anom = HUGE_VALF;
-  if (id == -1) {
-    FORDIV((*components), c, ind)
-      for (; c; c=c->next) {
-        a = c->anomaly(vec);
-        if (a <= th) {
-          lp = c->logp(vec);
-          if (cm == 0 || lp > lpm) {
-            lpm = lp;
-            cm = c;
-            anom = a;
-          }
-        } else if (a < anom) {
-          cm = c;
-          anom = a;
-        }
-      }
-  } else {
-    for (c=(*components)[id]; c; c=c->next) {
-      a = c->anomaly(vec);
-      if (a <= th) {
-        lp = c->logp(vec);
-        if (cm == 0 || lp > lpm) {
-          lpm = lp;
-          cm = c;
-          anom = a;
-        }
-      } else if (a < anom) {
-        cm = c;
-        anom = a;
-      }
-    }
-  }
-  return cm;
+	IscComponent* c;
+	IscComponent* cm = 0;
+	double a, lp, lpm;
+	int ind;
+	lpm = -HUGE_VALF;
+	anom = HUGE_VALF;
+	if (id == -1) {
+		FORDIV((*components), c, ind)
+    		  for (; c; c=c->next) {
+    			  a = c->anomaly(vec);
+    			  if (a <= th) {
+    				  lp = c->logp(vec);
+    				  if (cm == 0 || lp > lpm) {
+    					  lpm = lp;
+    					  cm = c;
+    					  anom = a;
+    				  }
+    			  } else if (a < anom) {
+    				  cm = c;
+    				  anom = a;
+    			  }
+    		  }
+	} else {
+		for (c=(*components)[id]; c; c=c->next) {
+			a = c->anomaly(vec);
+			if (a <= th) {
+				lp = c->logp(vec);
+				if (cm == 0 || lp > lpm) {
+					lpm = lp;
+					cm = c;
+					anom = a;
+				}
+			} else if (a < anom) {
+				cm = c;
+				anom = a;
+			}
+		}
+	}
+	return cm;
 }
 
 void IscMixture::reset()
 {
-  IscComponent* c;
-  int ind;
-  FORDIV((*components), c, ind)
-    for (; c; c=c->next)
-      c->reset();
+	IscComponent* c;
+	int ind;
+	FORDIV((*components), c, ind)
+	for (; c; c=c->next)
+		c->reset();
 }
 

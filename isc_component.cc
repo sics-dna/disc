@@ -1,4 +1,4 @@
- /*
+/*
  --------------------------------------------------------------------------
  Copyright (C) 2011, 2015 SICS Swedish ICT AB
 
@@ -31,6 +31,7 @@
 #endif
 #endif
 #include <stdio.h>
+#include <string.h>
 /*
 typedef class IscMicroModel* (*IscCreateFunc)(const void* co, int ind);
 
@@ -67,140 +68,165 @@ protected:
   class IscMicroModel** micro;
   IscCombinationRule comb;
 };
-*/
+ */
 
 
 IscComponent::IscComponent(int cla, int clu, int ll, IscCombinationRule cr, IscCreateFunc cf, void* co)
 {
-  int i;
-  class_id = cla;
-  cluster_id = clu;
-  len = ll;
-  comb = cr;
-  micro = new IscMicroModel*[len];
-  for (i=0; i<len; i++)
-    micro[i] = cf(co, i);
-  next = 0;
+	int i;
+	class_id = cla;
+	cluster_id = clu;
+	len = ll;
+	comb = cr;
+	micro = new IscMicroModel*[len];
+	for (i=0; i<len; i++)
+		micro[i] = cf(co, i);
+	next = 0;
 }
 
 IscComponent::~IscComponent()
 {
-  int i;
-  for (i=0; i<len; i++)
-    delete micro[i];
-  delete [] micro;
+	int i;
+	for (i=0; i<len; i++)
+		delete micro[i];
+	delete [] micro;
+}
+
+IscComponent::IscComponent(AbstractModelExporter exporter, IscCreateFunc cf, void* co)
+{
+	int i;
+	exporter.fillParameter("class_id",class_id);
+	exporter.fillParameter("cluster_id",cluster_id);
+	exporter.fillParameter("len",len);
+	exporter.fillParameter("comb",comb);
+
+	micro = new IscMicroModel*[len];
+	for (i=0; i<len; i++)
+		micro[i] = cf(co, i);
+	next = 0;
+}
+
+void IscComponent::exportModel(AbstractModelExporter exporter) {
+	exporter.addParameter("class_id",class_id);
+	exporter.addParameter("cluster_id",cluster_id);
+	exporter.addParameter("len",len);
+
+	for (int i=0; i<len; i++) {
+		AbstractModelExporter microExporter = exporter.createModelExporter(new char[]{(char)i});
+		micro[i]->exportModel(microExporter);
+	}
 }
 
 double IscComponent::anomaly(intfloat* vec)
 {
-  int i;
-  double anomaly_sum, anomaly_max, a, anomaly_min;
-  anomaly_sum = anomaly_max = 0.0;
-  anomaly_min = -HUGE_VALF;
-  for (i=0; i<len; i++) {
-    a = micro[i]->anomaly(vec);
+	int i;
+	double anomaly_sum, anomaly_max, a, anomaly_min;
+	anomaly_sum = anomaly_max = 0.0;
+	anomaly_min = -HUGE_VALF;
+	for (i=0; i<len; i++) {
+		a = micro[i]->anomaly(vec);
 
-    if(DEBUG && a > 700 ){
-    	printf("Anom: %.2f\n",a);
-    }
-    a = (a < HUGE_VALF)?a:1000;  //if not a limited value
+		if(DEBUG && a > 700 ){
+			printf("Anom: %.2f\n",a);
+		}
+		a = (a < HUGE_VALF)?a:1000;  //if not a limited value
 
-    anomaly_sum += a;
+		anomaly_sum += a;
 
-    if (a > anomaly_max) anomaly_max = a;
-    if (a < anomaly_min) anomaly_min = a;
-  }
-  if (comb == IscMax)  // The below is wrong - both numbers should be adjusted
-	  return anomaly_max;
-  else if (comb == IscMin)
-	  return anomaly_min;
-  else
-	  return anomaly_sum;
+		if (a > anomaly_max) anomaly_max = a;
+		if (a < anomaly_min) anomaly_min = a;
+	}
+	if (comb == IscMax)  // The below is wrong - both numbers should be adjusted
+		return anomaly_max;
+	else if (comb == IscMin)
+		return anomaly_min;
+	else
+		return anomaly_sum;
 }
 
 double IscComponent::logp(intfloat* vec)
 {
-  int i;
-  double lp = 0.0;
-  for (i=0; i<len; i++)  // Here we make an independence assumption
-    lp += micro[i]->logp(vec);
-  return lp;
+	int i;
+	double lp = 0.0;
+	for (i=0; i<len; i++)  // Here we make an independence assumption
+		lp += micro[i]->logp(vec);
+	return lp;
 }
 
 int IscComponent::ev_logp(intfloat* vec, double& e, double& v)
 {
-  int i;
-  double ee, vv;
-  e = v = 0.0;
-  for (i=0; i<len; i++) {
-    if (!micro[i]->ev_logp(vec, ee, vv))
-      return 0;
-    e += ee;
-    v += vv;
-  }
-  return 1;
+	int i;
+	double ee, vv;
+	e = v = 0.0;
+	for (i=0; i<len; i++) {
+		if (!micro[i]->ev_logp(vec, ee, vv))
+			return 0;
+		e += ee;
+		v += vv;
+	}
+	return 1;
 }
 
 int IscComponent::logpeak(intfloat* vec, double& p)
 {
-  int i;
-  double pp;
-  p = 0.0;
-  for (i=0; i<len; i++) {
-    if (!micro[i]->logpeak(vec, pp))
-      return 0;
-    p += pp;
-  }
-  return 1;
+	int i;
+	double pp;
+	p = 0.0;
+	for (i=0; i<len; i++) {
+		if (!micro[i]->logpeak(vec, pp))
+			return 0;
+		p += pp;
+	}
+	return 1;
 }
 
 int IscComponent::invanomaly(intfloat* vec, double ano, intfloat* minvec, intfloat* maxvec, intfloat* peakvec)
 {
-  int i;
-  for (i=0; i<len; i++) {
-    if (!micro[i]->invanomaly(vec, ano, minvec, maxvec, peakvec))
-      return 0;
-  }
-  return 1;
+	int i;
+	for (i=0; i<len; i++) {
+		if (!micro[i]->invanomaly(vec, ano, minvec, maxvec, peakvec))
+			return 0;
+	}
+	return 1;
 }
 
 int IscComponent::partsanomaly(intfloat* vec, double* avec)
 {
-  int i;
-  for (i=0; i<len; i++) {
-    avec[i] = micro[i]->anomaly(vec);
-  }
-  return 1;
+	int i;
+	for (i=0; i<len; i++) {
+		avec[i] = micro[i]->anomaly(vec);
+	}
+	return 1;
 }
 
 int IscComponent::stats(intfloat* vec, double* expect, double* var)
 {
-  int i;
-  for (i=0; i<len; i++) {
-    if (!micro[i]->stats(vec, expect, var))
-      return 0;
-  }
-  return 1;
+	int i;
+	for (i=0; i<len; i++) {
+		if (!micro[i]->stats(vec, expect, var))
+			return 0;
+	}
+	return 1;
 }
 
 void IscComponent::add(intfloat* vec)
 {
-  int i;
-  for (i=0; i<len; i++)
-    micro[i]->add(vec);
+	int i;
+	for (i=0; i<len; i++)
+		micro[i]->add(vec);
 }
 
 void IscComponent::remove(intfloat* vec)
 {
-  int i;
-  for (i=0; i<len; i++)
-    micro[i]->remove(vec);
+	int i;
+	for (i=0; i<len; i++)
+		micro[i]->remove(vec);
 }
 
 void IscComponent::reset()
 {
-  int i;
-  for (i=0; i<len; i++)
-    micro[i]->reset();
+	int i;
+	for (i=0; i<len; i++)
+		micro[i]->reset();
 }
 

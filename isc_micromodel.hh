@@ -27,12 +27,15 @@
 #define DEBUG 0
 #endif
 
+#include "isc_exporter.hh"
 
 class IscMicroModel {
 public:
   IscMicroModel() {};
   virtual ~IscMicroModel() {};
-
+  virtual void exportModel(AbstractModelExporter exporter) {
+	  exporter.notImplemented();
+  }
   // Should returns a micro model of the same class and with the same creation parameters as used when constructed.
   virtual IscMicroModel* create() {return 0;};
 
