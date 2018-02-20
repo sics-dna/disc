@@ -71,17 +71,6 @@ IscMixture::IscMixture(int ll, IscCombinationRule cr, IscCreateFunc cf, void* co
 	components = new DynamicIndexVector<IscComponent*>(0);
 }
 
-
-IscMixture::IscMixture(AbstractModelExporter exporter, IscCreateFunc cf, void* co)
-{
-	exporter.fillParameter("comb", comb);
-	exporter.fillParameter("len", len);
-	exporter.fillParameter("num", num);
-	createfunc = cf;
-	createobj = co;
-	components = new DynamicIndexVector<IscComponent*>(0);
-}
-
 IscMixture::~IscMixture()
 {
 	IscComponent *c1, *c2;
@@ -94,20 +83,30 @@ IscMixture::~IscMixture()
 	delete components;
 }
 
-
-void IscMixture::exportModel(AbstractModelExporter exporter) {
-	exporter.addParameter("comb", comb);
-	exporter.addParameter("len", len);
-	exporter.addParameter("num", num);
+void IscMixture::importModel(IscAbstractModelImporter *importer) {
+	importer->fillParameter("num",num);
 
 	IscComponent* c;
+	for(int i=0; i < num; i++) {
+		c = add_component(i);
+		IscAbstractModelImporter *compImporter = importer->getModelImporter(i);
+		c->importModel(compImporter);
+		delete compImporter;
+	}
+}
+
+void IscMixture::exportModel(IscAbstractModelExporter *exporter) {
+	exporter->addParameter("Component", "IscMixture");
+	exporter->addParameter("num",num);
+	IscComponent* c;
 	int ind;
-	FORDIV((*components), c, ind)
 	int i=0;
+	FORDIV((*components), c, ind)
 	for (; c; c=c->next) {
-		AbstractModelExporter compExporter = exporter.createModelExporter(new char[]{(char)i});
-		c->exportComponent(compExporter);
+		IscAbstractModelExporter *compExporter = exporter->createModelExporter(i);
+		c->exportModel(compExporter);
 		i++;
+		delete compExporter;
 	}
 }
 

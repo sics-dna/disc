@@ -24,16 +24,16 @@
 #define IscMixture_HH_
 
 #include "dynindvector.hh"
-#include "isc_exporter.hh"
+#include "isc_exportimport.hh"
 
 
 class IscMixture {
 public:
   IscMixture(int len, IscCombinationRule cr, IscCreateFunc cf, void* co);
-  IscMixture(AbstractModelExporter exporter, IscCreateFunc cf, void* co);
   virtual ~IscMixture();
 
-  virtual void exportModel(AbstractModelExporter exporter);
+  virtual void importModel(IscAbstractModelImporter* importer);
+  virtual void exportModel(IscAbstractModelExporter* exporter);
 
   // Administration
   virtual IscComponent* add_component(int id);

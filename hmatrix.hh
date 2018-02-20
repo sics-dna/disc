@@ -21,21 +21,13 @@
 
 #ifndef _HMATRIX
 
-#include "isc_exporter.hh"
+#include "isc_exportimport.hh"
 
 class HMatrix
 {
 public:
 	HMatrix(int n, int tp) { typ = tp; dim = n; len = (tp==2 ? n*(n+1)/2 : n); uvec = 0; livec = 0; vec = new double[len]; for (int i=0; i<len; i++) vec[i]=0.0; };
-	HMatrix(AbstractModelExporter& m) {
-		m.fillParameter("hmatrix_typ", typ);
-		m.fillParameter("hmatrix_dim", dim);
-		m.fillParameter("hmatrix_len", len);
-		uvec = 0;
-		livec = 0;
-		vec = new double[len];
-		m.fillParameter("hmatrix_vec", vec, len);
-	};
+
 	HMatrix(HMatrix& m) { typ = m.typ; dim = m.dim; len = m.len; uvec = 0; livec = 0; vec = new double[len]; for (int i=0; i<len; i++) vec[i]=m.vec[i]; };
 
 
@@ -56,12 +48,21 @@ public:
 	virtual double det_cond(int cdim);
 	virtual HMatrix* inverse();
 
-	virtual void exportHMatrix(AbstractModelExporter exporter) {
-		exporter.addParameter("hmatrix_typ",typ);
-		exporter.addParameter("hmatrix_dim",dim);
-		exporter.addParameter("hmatrix_len",len);
-		exporter.addParameter("hmatrix_vec",vec,len);
+	virtual void exportHMatrix(IscAbstractModelExporter *exporter) {
+		exporter->addParameter("hmatrix_typ",typ);
+		exporter->addParameter("hmatrix_dim",dim);
+		exporter->addParameter("hmatrix_len",len);
+		exporter->addParameter("hmatrix_vec",vec,len);
 	}
+	virtual void importHMatrix(IscAbstractModelImporter *importer) {
+		importer->fillParameter("hmatrix_typ", typ);
+		importer->fillParameter("hmatrix_dim", dim);
+		importer->fillParameter("hmatrix_len", len);
+		uvec = 0;
+		livec = 0;
+		vec = new double[len];
+		importer->fillParameter("hmatrix_vec", vec, len);
+	};
 protected:
 	void clean() { if (uvec) delete [] uvec; if (livec) delete [] livec; uvec = 0; livec = 0; };
 	void factor();

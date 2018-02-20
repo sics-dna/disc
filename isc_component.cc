@@ -92,28 +92,23 @@ IscComponent::~IscComponent()
 	delete [] micro;
 }
 
-IscComponent::IscComponent(AbstractModelExporter exporter, IscCreateFunc cf, void* co)
+void IscComponent::importModel(IscAbstractModelImporter *importer)
 {
-	int i;
-	exporter.fillParameter("class_id",class_id);
-	exporter.fillParameter("cluster_id",cluster_id);
-	exporter.fillParameter("len",len);
-	exporter.fillParameter("comb",comb);
-
 	micro = new IscMicroModel*[len];
-	for (i=0; i<len; i++)
-		micro[i] = cf(co, i);
-	next = 0;
+	for (int i=0; i<len; i++) {
+		IscAbstractModelImporter *modelImporter = importer->getModelImporter(i);
+		micro[i]->importModel(modelImporter);
+		//delete modelImporter;
+	}
+
 }
 
-void IscComponent::exportModel(AbstractModelExporter exporter) {
-	exporter.addParameter("class_id",class_id);
-	exporter.addParameter("cluster_id",cluster_id);
-	exporter.addParameter("len",len);
-
+void IscComponent::exportModel(IscAbstractModelExporter *exporter) {
+	exporter->addParameter("Component", "IscComponent");
 	for (int i=0; i<len; i++) {
-		AbstractModelExporter microExporter = exporter.createModelExporter(new char[]{(char)i});
+		IscAbstractModelExporter *microExporter = exporter->createModelExporter(i);
 		micro[i]->exportModel(microExporter);
+		//delete microExporter;
 	}
 }
 

@@ -87,6 +87,8 @@ AnomalyDetector::AnomalyDetector(int n, int off, int splt, double th, int cl, Is
   isc = new IscMixture(len, cr, cf, this); 
 }
 
+
+
 AnomalyDetector::AnomalyDetector()
 {
 }
@@ -94,6 +96,22 @@ AnomalyDetector::AnomalyDetector()
 AnomalyDetector::~AnomalyDetector()
 {
   delete isc;
+}
+
+
+void AnomalyDetector::importModel(IscAbstractModelImporter *importer) {
+	if(DEBUG)
+		printf("IscAnomalyDetector start importing");
+
+	IscAbstractModelImporter *iscImporter = importer->getModelImporter("isc");
+	isc->importModel(iscImporter);
+	delete iscImporter;
+}
+
+void AnomalyDetector::exportModel(IscAbstractModelExporter *exporter) {
+	IscAbstractModelExporter *iscExporter = exporter->createModelExporter("isc");
+	isc->exportModel(iscExporter);
+	delete iscExporter;
 }
 
 void AnomalyDetector::SetParams(int off, int splt, double th, int cl)

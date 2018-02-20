@@ -22,13 +22,16 @@
 #ifndef AnomalyDetector_HH_
 #define AnomalyDetector_HH_
 
+#include "isc_exportimport.hh"
+
 class AnomalyDetector {
 public:
   AnomalyDetector();
-  AnomalyDetector(int n, int off, int splt, double th, int cl);  // Sublasses must know the numbers and types of micromodels
+  AnomalyDetector(int n, int off, int splt, double th, int cl);  // Subclasses must know the numbers and types of micromodels
   AnomalyDetector(int n, int off, int splt, double th, int cl, IscCombinationRule cr, IscCreateFunc cf);  // Or a creation function for the appropriate micromodels can be used
 
-
+  virtual void importModel(IscAbstractModelImporter *importer);
+  virtual void exportModel(IscAbstractModelExporter *exporter);
   virtual ~AnomalyDetector();
   virtual void SetParams(int off, int splt, double th, int cl);
   virtual void Reset();

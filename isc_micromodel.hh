@@ -24,18 +24,25 @@
 #include "intfloat.hh"
 
 #ifndef DEBUG
-#define DEBUG 0
+#define DEBUG 1
 #endif
 
-#include "isc_exporter.hh"
+#include "isc_exportimport.hh"
+#include <stdio.h>
 
 class IscMicroModel {
 public:
   IscMicroModel() {};
   virtual ~IscMicroModel() {};
-  virtual void exportModel(AbstractModelExporter exporter) {
-	  exporter.notImplemented();
+
+  virtual void exportModel(IscAbstractModelExporter *exporter) {
+	  exporter->notImplemented();
   }
+  virtual void importModel(IscAbstractModelImporter *importer) {
+	  printf("Import model not implemented");
+	  importer->notImplemented();
+  }
+
   // Should returns a micro model of the same class and with the same creation parameters as used when constructed.
   virtual IscMicroModel* create() {return 0;};
 
