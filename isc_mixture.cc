@@ -103,12 +103,13 @@ void IscMixture::exportModel(IscAbstractModelExporter *exporter) {
 	IscComponent* c;
 	int ind;
 	int i=0;
-	FORDIV((*components), c, ind)
-	for (; c; c=c->next) {
-		IscAbstractModelExporter *compExporter = exporter->createModelExporter(i);
-		c->exportModel(compExporter);
-		i++;
-		delete compExporter;
+	FORDIV((*components), c, ind) {
+		for (; c; c=c->next) {
+			IscAbstractModelExporter *compExporter = exporter->createModelExporter(i);
+			c->exportModel(compExporter);
+			i++;
+			delete compExporter;
+		}
 	}
 }
 
@@ -171,10 +172,10 @@ double IscMixture::anomaly(intfloat* vec, int id)
 	am = HUGE_VALF;
 	if (id == -1) {
 		FORDIV((*components), c, ind)
-    		  for (; c; c=c->next) {
-    			  a = c->anomaly(vec);
-    			  if (a < am) am = a;
-    		  }
+    				  for (; c; c=c->next) {
+    					  a = c->anomaly(vec);
+    					  if (a < am) am = a;
+    				  }
 	} else {
 		if (0 == (*components)[id])
 			return 0.0;
@@ -194,10 +195,10 @@ double IscMixture::logp(intfloat* vec, int id)
 	lpm = -HUGE_VALF;
 	if (id == -1) {
 		FORDIV((*components), c, ind)
-    		  for (; c; c=c->next) {
-    			  lp = c->logp(vec);
-    			  if (lp > lpm) lpm = lp;
-    		  }
+    				  for (; c; c=c->next) {
+    					  lp = c->logp(vec);
+    					  if (lp > lpm) lpm = lp;
+    				  }
 	} else {
 		for (c=(*components)[id]; c; c=c->next) {
 			lp = c->logp(vec);
@@ -216,16 +217,16 @@ IscComponent* IscMixture::classify(intfloat* vec, double th, int id)
 	lpm = -HUGE_VALF;
 	if (id == -1) {
 		FORDIV((*components), c, ind)
-    		  for (; c; c=c->next) {
-    			  a = c->anomaly(vec);
-    			  if (a <= th) {
-    				  lp = c->logp(vec);
-    				  if (lp > lpm) {
-    					  lpm = lp;
-    					  cm = c;
+    				  for (; c; c=c->next) {
+    					  a = c->anomaly(vec);
+    					  if (a <= th) {
+    						  lp = c->logp(vec);
+    						  if (lp > lpm) {
+    							  lpm = lp;
+    							  cm = c;
+    						  }
+    					  }
     				  }
-    			  }
-    		  }
 	} else {
 		for (c=(*components)[id]; c; c=c->next) {
 			a = c->anomaly(vec);
@@ -251,20 +252,20 @@ IscComponent* IscMixture::classify_forced(intfloat* vec, double th, int id, doub
 	anom = HUGE_VALF;
 	if (id == -1) {
 		FORDIV((*components), c, ind)
-    		  for (; c; c=c->next) {
-    			  a = c->anomaly(vec);
-    			  if (a <= th) {
-    				  lp = c->logp(vec);
-    				  if (cm == 0 || lp > lpm) {
-    					  lpm = lp;
-    					  cm = c;
-    					  anom = a;
+    				  for (; c; c=c->next) {
+    					  a = c->anomaly(vec);
+    					  if (a <= th) {
+    						  lp = c->logp(vec);
+    						  if (cm == 0 || lp > lpm) {
+    							  lpm = lp;
+    							  cm = c;
+    							  anom = a;
+    						  }
+    					  } else if (a < anom) {
+    						  cm = c;
+    						  anom = a;
+    					  }
     				  }
-    			  } else if (a < anom) {
-    				  cm = c;
-    				  anom = a;
-    			  }
-    		  }
 	} else {
 		for (c=(*components)[id]; c; c=c->next) {
 			a = c->anomaly(vec);

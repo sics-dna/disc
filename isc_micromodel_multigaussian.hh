@@ -49,11 +49,11 @@ public:
 		importer->fillParameter("sumx", sumx, dim);
 		IscAbstractModelImporter *sumxxImporter = importer->getModelImporter("sumxx");
 		sumxx->importHMatrix(sumxxImporter);
-		//delete sumxxImporter;
+		delete sumxxImporter;
 		importer->fillParameter("mean", mean, dim);
 		IscAbstractModelImporter *varImporter = importer->getModelImporter("var");
 		var->importHMatrix(varImporter);
-		//delete varImporter;
+		delete varImporter;
 		importer->fillParameter("n", n);
 		importer->fillParameter("dirty", dirty);
 	}
