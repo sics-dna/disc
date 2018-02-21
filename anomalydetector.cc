@@ -317,7 +317,7 @@ void AnomalyDetector::CalcAnomaly(class DataObject* d, double* devs)
 //      }
     }
 
-    float anom = isc->anomaly(vec+offset, id);
+    double anom = isc->anomaly(vec+offset, id);
     devs[i] = anom;
   }
 }

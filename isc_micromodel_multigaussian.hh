@@ -45,7 +45,8 @@ public:
 	}
 
 	virtual void importModel(IscAbstractModelImporter *importer) {
-		printf("Calling import modell for IscMultiGaussianMicroModel");
+		if (DEBUG)
+			printf("Calling import modell for IscMultiGaussianMicroModel");
 		importer->fillParameter("sumx", sumx, dim);
 		IscAbstractModelImporter *sumxxImporter = importer->getModelImporter("sumxx");
 		sumxx->importHMatrix(sumxxImporter);
@@ -63,11 +64,11 @@ public:
 		exporter->addParameter("sumx", sumx, dim);
 		IscAbstractModelExporter *sumxxExporter = exporter->createModelExporter("sumxx");
 		sumxx->exportHMatrix(sumxxExporter);
-		//delete sumxxExporter;
+		delete sumxxExporter;
 		exporter->addParameter("mean", mean, dim);
 		IscAbstractModelExporter *varExporter = exporter->createModelExporter("var");
 		var->exportHMatrix(varExporter);
-		//delete varExporter;
+		delete varExporter;
 		exporter->addParameter("n", n);
 		exporter->addParameter("dirty", dirty);
 	}

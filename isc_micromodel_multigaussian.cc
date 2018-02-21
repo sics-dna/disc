@@ -129,7 +129,7 @@ double IscRawMultiGaussianMicroModel::raw_anomaly(double r, double n, int d)
 {
 	float anom = (r==0.0 ? 0.0 : r < 0.0 ? 700.0 :
 	          -logintmultistudent(0.5*n, sqrt(r), d-1.0));
-	if(DEBUG && anom >= 700)
+	if(DEBUG)
 		printf("%f %f %i %f\n", r, n, d, anom);
   return anom;
 }
