@@ -94,11 +94,10 @@ IscComponent::~IscComponent()
 
 void IscComponent::importModel(IscAbstractModelImporter *importer)
 {
-	micro = new IscMicroModel*[len];
 	for (int i=0; i<len; i++) {
 		IscAbstractModelImporter *modelImporter = importer->getModelImporter(i);
 		micro[i]->importModel(modelImporter);
-		//delete modelImporter;
+		delete modelImporter;
 	}
 
 }
@@ -108,7 +107,7 @@ void IscComponent::exportModel(IscAbstractModelExporter *exporter) {
 	for (int i=0; i<len; i++) {
 		IscAbstractModelExporter *microExporter = exporter->createModelExporter(i);
 		micro[i]->exportModel(microExporter);
-		//delete microExporter;
+		delete microExporter;
 	}
 }
 

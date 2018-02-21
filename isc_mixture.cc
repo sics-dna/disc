@@ -84,10 +84,12 @@ IscMixture::~IscMixture()
 }
 
 void IscMixture::importModel(IscAbstractModelImporter *importer) {
-	importer->fillParameter("num",num);
+	int num_of_added_components;
+	importer->fillParameter("num",num_of_added_components);
 
 	IscComponent* c;
-	for(int i=0; i < num; i++) {
+	// TODO only works without clusters
+	for(int i=0; i < num_of_added_components; i++) {
 		c = add_component(i);
 		IscAbstractModelImporter *compImporter = importer->getModelImporter(i);
 		c->importModel(compImporter);
