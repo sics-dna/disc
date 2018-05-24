@@ -182,6 +182,25 @@ public:
 
 	};
 
+	virtual void importModel(IscAbstractModelImporter *importer) {
+		if (DEBUG)
+			printf("Calling import model for IscMarkovGaussMicroModel");
+        importer->fillParameter("gauss_mean", gaussian_component->mean, gdim_tot);
+        importer->fillParameter("gauss_count", gaussian_component->count);
+        IscAbstractModelImporter *hmatrixImporter = importer->getModelImporter("gauss_hmatrix");
+        gaussian_component->var->importHMatrix(hmatrixImporter);
+        delete hmatrixImporter;
+	}
+
+	virtual void exportModel(IscAbstractModelExporter *exporter) {
+		exporter->addParameter("MicroModel", "IscMarkovGaussMicroModel");
+		exporter->addParameter("gauss_mean", gaussian_component->mean, gdim_tot);
+        exporter->addParameter("gauss_count", gaussian_component->count);
+        IscAbstractModelExporter *hmatrixExporter = exporter->createModelExporter("gauss_hmatrix");
+        gaussian_component->var->exportHMatrix(hmatrixExporter);
+        delete hmatrixExporter;
+	}
+
 	// NOT IMPLEMENTED
 	virtual int ev_logp(intfloat* vec, double& e, double& v) { return 0; };
 	virtual int logpeak(intfloat* vec, double& p) { return 0; };
@@ -282,6 +301,28 @@ public:
 			gaussian_components[i]->reset();
 		}
 	}
+
+	virtual void importModel(IscAbstractModelImporter *importer) {
+		if (DEBUG)
+			printf("Calling import modell for IscMarkovGaussCombinerMicroModel");
+		for(int i=0; i < num_of_components; i++) {
+		    IscAbstractModelImporter *markovModelImporter = importer->getModelImporter(i);
+		    gaussian_components[i]->importModel(markovModelImporter);
+		    delete markovModelImporter;
+		}
+
+	}
+
+	virtual void exportModel(IscAbstractModelExporter *exporter) {
+		exporter->addParameter("MicroModel", "IscMarkovGaussCombinerMicroModel");
+		for(int i=0; i < num_of_components; i++) {
+		    IscAbstractModelExporter *markovModelExporter = exporter->createModelExporter(i);
+		    gaussian_components[i]->exportModel(markovModelExporter);
+		    delete markovModelExporter;
+		}
+	}
+
+
 protected:
 	IscMarkovGaussMicroModel** gaussian_components;
 	int num_of_components;
@@ -319,6 +360,24 @@ public:
 	virtual void reset() {
 		markovModel->reset();
 	};
+
+
+	virtual void importModel(IscAbstractModelImporter *importer) {
+		if (DEBUG)
+			printf("Calling import modell for IscMultiGaussianMicroModel");
+		importer->fillParameter("vector_index", vector_index, vector_length);
+		IscAbstractModelImporter *markovModelImporter = importer->getModelImporter("markovModel");
+		markovModel->importModel(markovModelImporter);
+		delete markovModelImporter;
+	}
+
+	virtual void exportModel(IscAbstractModelExporter *exporter) {
+		exporter->addParameter("MicroModel", "IscMultiGaussianMicroModel");
+		exporter->addParameter("vector_index", vector_index, vector_length);
+		IscAbstractModelExporter *markovModelExporter = exporter->createModelExporter("markovModel");
+		markovModel->exportModel(markovModelExporter);
+		delete markovModelExporter;
+	}
 
 protected:
 	int* vector_index;
